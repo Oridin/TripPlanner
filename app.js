@@ -73,6 +73,7 @@ const defaultTrip = {
 let state = loadState();
 let activeFilter = "all";
 let pointerDrag = null;
+let resizeDrag = null;
 
 const calendarGrid = document.querySelector("#calendarGrid");
 const categoryStrip = document.querySelector("#categoryStrip");
@@ -331,6 +332,13 @@ function createEventCard(event, dateKey) {
     ${details || span ? `<span class="event-meta">${escapeHtml([details, span].filter(Boolean).join(" - "))}</span>` : ""}
   `;
 
+  if (event.startDate === event.endDate || card.classList.contains("span-start")) {
+    card.append(createResizeHandle(event.id, "start"));
+  }
+  if (event.startDate === event.endDate || card.classList.contains("span-end")) {
+    card.append(createResizeHandle(event.id, "end"));
+  }
+
   card.addEventListener("click", () => {
     if (!card.dataset.suppressClick) openDialog(event);
   });
@@ -338,6 +346,21 @@ function createEventCard(event, dateKey) {
   card.addEventListener("mousedown", (mouseEvent) => startMouseDrag(mouseEvent, event.id));
   card.addEventListener("touchstart", (touchEvent) => startTouchDrag(touchEvent, event.id), { passive: false });
   return card;
+}
+
+function createResizeHandle(id, edge) {
+  const handle = document.createElement("span");
+  handle.className = `resize-handle resize-${edge}`;
+  handle.dataset.edge = edge;
+  handle.setAttribute("aria-hidden", "true");
+  handle.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+  });
+  handle.addEventListener("pointerdown", (event) => startResizeDrag(event, id, edge));
+  handle.addEventListener("mousedown", (event) => startResizeDrag(event, id, edge));
+  handle.addEventListener("touchstart", (event) => startResizeDrag(event, id, edge), { passive: false });
+  return handle;
 }
 
 function formatShortDate(dateKey) {
@@ -354,6 +377,7 @@ function escapeHtml(value) {
 }
 
 function startPointerDrag(event, id) {
+  if (event.target.closest(".resize-handle")) return;
   if (event.button !== 0) return;
   const card = event.currentTarget;
   beginDrag(card, id, event.clientX, event.clientY);
@@ -364,6 +388,7 @@ function startPointerDrag(event, id) {
 }
 
 function startMouseDrag(event, id) {
+  if (event.target.closest(".resize-handle")) return;
   if (event.button !== 0 || pointerDrag) return;
   beginDrag(event.currentTarget, id, event.clientX, event.clientY);
   document.addEventListener("mousemove", onMouseMove);
@@ -371,12 +396,90 @@ function startMouseDrag(event, id) {
 }
 
 function startTouchDrag(event, id) {
+  if (event.target.closest(".resize-handle")) return;
   if (pointerDrag) return;
   const touch = event.touches[0];
   beginDrag(event.currentTarget, id, touch.clientX, touch.clientY);
   document.addEventListener("touchmove", onTouchMove, { passive: false });
   document.addEventListener("touchend", onTouchEnd);
   document.addEventListener("touchcancel", onTouchEnd);
+}
+
+function startResizeDrag(event, id, edge) {
+  event.preventDefault();
+  event.stopPropagation();
+  if (resizeDrag) return;
+  const point = getEventPoint(event);
+  const item = currentTrip().events.find((entry) => entry.id === id);
+  if (!item) return;
+
+  resizeDrag = {
+    id,
+    edge,
+    startX: point.clientX,
+    startY: point.clientY,
+    active: false,
+    originalStartDate: item.startDate,
+    originalEndDate: item.endDate,
+  };
+
+  document.body.classList.add("resizing-event");
+  document.addEventListener("pointermove", onResizeMove);
+  document.addEventListener("pointerup", onResizeEnd);
+  document.addEventListener("mousemove", onResizeMove);
+  document.addEventListener("mouseup", onResizeEnd);
+  document.addEventListener("touchmove", onResizeMove, { passive: false });
+  document.addEventListener("touchend", onResizeEnd);
+  document.addEventListener("touchcancel", onResizeEnd);
+}
+
+function onResizeMove(event) {
+  if (!resizeDrag) return;
+  event.preventDefault();
+  const point = getEventPoint(event);
+  const distance = Math.hypot(point.clientX - resizeDrag.startX, point.clientY - resizeDrag.startY);
+  if (distance > 4) resizeDrag.active = true;
+
+  const target = getCellAtPoint(point.clientX, point.clientY);
+  if (!target) return;
+
+  const item = currentTrip().events.find((entry) => entry.id === resizeDrag.id);
+  if (!item) return;
+
+  const date = target.dataset.date;
+  if (resizeDrag.edge === "start") {
+    item.startDate = date <= item.endDate ? date : item.endDate;
+  } else {
+    item.endDate = date >= item.startDate ? date : item.startDate;
+  }
+
+  saveState();
+  renderCalendar();
+  document.querySelector(`.day-cell[data-date="${date}"]`)?.classList.add("drop-target");
+}
+
+function onResizeEnd() {
+  if (!resizeDrag) return;
+  cleanupResizeListeners();
+  document.body.classList.remove("resizing-event");
+  document.querySelectorAll(".drop-target").forEach((cell) => cell.classList.remove("drop-target"));
+  resizeDrag = null;
+  renderCalendar();
+}
+
+function cleanupResizeListeners() {
+  document.removeEventListener("pointermove", onResizeMove);
+  document.removeEventListener("pointerup", onResizeEnd);
+  document.removeEventListener("mousemove", onResizeMove);
+  document.removeEventListener("mouseup", onResizeEnd);
+  document.removeEventListener("touchmove", onResizeMove);
+  document.removeEventListener("touchend", onResizeEnd);
+  document.removeEventListener("touchcancel", onResizeEnd);
+}
+
+function getEventPoint(event) {
+  const touch = event.touches?.[0] || event.changedTouches?.[0];
+  return touch || event;
 }
 
 function beginDrag(card, id, startX, startY) {
@@ -478,9 +581,13 @@ function highlightDropCell(x, y) {
 function getDropCell(x, y) {
   const clone = pointerDrag?.clone;
   if (clone) clone.hidden = true;
-  const cell = document.elementFromPoint(x, y)?.closest(".day-cell");
+  const cell = getCellAtPoint(x, y);
   if (clone) clone.hidden = false;
   return cell;
+}
+
+function getCellAtPoint(x, y) {
+  return document.elementFromPoint(x, y)?.closest(".day-cell");
 }
 
 function openDialog(event = {}) {
