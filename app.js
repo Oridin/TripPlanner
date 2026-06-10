@@ -216,6 +216,27 @@ function getVisibleEvents(dateKey) {
     .sort((a, b) => a.startDate.localeCompare(b.startDate) || (a.time || "").localeCompare(b.time || ""));
 }
 
+function assignMultiDayLanes(events) {
+  const lanes = [];
+  const laneById = new Map();
+  const multiDayEvents = events
+    .filter((event) => event.startDate !== event.endDate)
+    .sort((a, b) => a.startDate.localeCompare(b.startDate) || b.endDate.localeCompare(a.endDate));
+
+  multiDayEvents.forEach((event) => {
+    let lane = lanes.findIndex((laneEndDate) => laneEndDate < event.startDate);
+    if (lane === -1) {
+      lane = lanes.length;
+      lanes.push(event.endDate);
+    } else {
+      lanes[lane] = event.endDate;
+    }
+    laneById.set(event.id, lane);
+  });
+
+  return { laneById, laneCount: lanes.length };
+}
+
 function render() {
   const trip = currentTrip();
   document.querySelector("h1").textContent = trip.name;
@@ -270,6 +291,7 @@ function renderCalendar() {
   const trip = currentTrip();
   const tripStart = parseDate(trip.startDate);
   const tripEnd = parseDate(trip.endDate);
+  const { laneById, laneCount } = assignMultiDayLanes(trip.events);
   calendarGrid.innerHTML = "";
 
   buildCalendarDates().forEach((date) => {
@@ -285,11 +307,28 @@ function renderCalendar() {
     `;
 
     const stack = cell.querySelector(".event-stack");
-    getVisibleEvents(dateKey).forEach((event) => stack.append(createEventCard(event, dateKey)));
+    const visibleEvents = getVisibleEvents(dateKey);
+    const multiDayEvents = visibleEvents.filter((event) => event.startDate !== event.endDate);
+    const singleDayEvents = visibleEvents.filter((event) => event.startDate === event.endDate);
+
+    for (let lane = 0; lane < laneCount; lane += 1) {
+      const event = multiDayEvents.find((entry) => laneById.get(entry.id) === lane);
+      if (event) stack.append(createEventCard(event, dateKey));
+      else stack.append(createLaneSpacer());
+    }
+
+    singleDayEvents.forEach((event) => stack.append(createEventCard(event, dateKey)));
 
     cell.querySelector(".add-day-button").addEventListener("click", () => openDialog({ startDate: dateKey, endDate: dateKey }));
     calendarGrid.append(cell);
   });
+}
+
+function createLaneSpacer() {
+  const spacer = document.createElement("span");
+  spacer.className = "lane-spacer";
+  spacer.setAttribute("aria-hidden", "true");
+  return spacer;
 }
 
 function createEventCard(event, dateKey) {
@@ -310,10 +349,15 @@ function createEventCard(event, dateKey) {
 
   const details = [event.time, event.location].filter(Boolean).join(" - ");
   const span = event.startDate !== event.endDate ? `${formatShortDate(event.startDate)} to ${formatShortDate(event.endDate)}` : "";
-  card.innerHTML = `
-    <span class="event-title">${escapeHtml(event.title)}</span>
-    ${details || span ? `<span class="event-meta">${escapeHtml([details, span].filter(Boolean).join(" - "))}</span>` : ""}
-  `;
+  if (event.startDate !== event.endDate) {
+    card.innerHTML = `<span class="event-title">${escapeHtml(event.title)}</span>`;
+    card.title = [event.title, details, span].filter(Boolean).join(" - ");
+  } else {
+    card.innerHTML = `
+      <span class="event-title">${escapeHtml(event.title)}</span>
+      ${details || span ? `<span class="event-meta">${escapeHtml([details, span].filter(Boolean).join(" - "))}</span>` : ""}
+    `;
+  }
 
   if (event.startDate === event.endDate || card.classList.contains("span-start")) {
     card.append(createResizeHandle(event.id, "start"));

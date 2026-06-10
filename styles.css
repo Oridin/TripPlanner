@@ -275,7 +275,12 @@ textarea {
 
 .event-stack {
   display: grid;
-  gap: 6px;
+  gap: 5px;
+}
+
+.lane-spacer {
+  display: block;
+  min-height: 29px;
 }
 
 .event-card {
@@ -309,6 +314,9 @@ textarea {
   background: var(--event-color);
   color: #111;
   box-shadow: none;
+  min-height: 29px;
+  overflow: hidden;
+  padding-block: 6px;
 }
 
 .event-card.multi-day:not(.span-start) {
@@ -318,6 +326,12 @@ textarea {
 .event-card.multi-day:not(.span-start) .event-title,
 .event-card.multi-day:not(.span-start) .event-meta {
   visibility: hidden;
+}
+
+.event-card.multi-day .event-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .event-card.span-start {
@@ -371,8 +385,8 @@ textarea {
 .resize-handle::after {
   content: "";
   position: absolute;
-  top: 9px;
-  bottom: 9px;
+  top: 7px;
+  bottom: 7px;
   left: 5px;
   width: 2px;
   border-radius: 2px;
