@@ -314,13 +314,22 @@ function renderCalendar() {
     for (let lane = 0; lane < laneCount; lane += 1) {
       const event = multiDayEvents.find((entry) => laneById.get(entry.id) === lane);
       if (event) stack.append(createEventCard(event, dateKey));
-      else stack.append(createLaneSpacer());
+      else if (shouldReserveLane(dateKey, lane, laneById, trip.events)) stack.append(createLaneSpacer());
     }
 
     singleDayEvents.forEach((event) => stack.append(createEventCard(event, dateKey)));
 
     cell.querySelector(".add-day-button").addEventListener("click", () => openDialog({ startDate: dateKey, endDate: dateKey }));
     calendarGrid.append(cell);
+  });
+}
+
+function shouldReserveLane(dateKey, lane, laneById, events) {
+  return events.some((event) => {
+    return event.startDate !== event.endDate
+      && laneById.get(event.id) === lane
+      && event.startDate < dateKey
+      && event.endDate > dateKey;
   });
 }
 
