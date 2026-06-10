@@ -177,6 +177,14 @@ textarea {
   gap: 12px;
 }
 
+.cloud-status {
+  min-height: 1.2em;
+  margin: -6px 0 0;
+  color: rgba(25, 25, 31, 0.72);
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
 .category-list {
   display: flex;
   flex-wrap: wrap;

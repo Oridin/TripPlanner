@@ -1,5 +1,13 @@
 const STORAGE_KEY = "trip-planner-v4";
 const LEGACY_STORAGE_KEY = "sydney-visa-trip-planner-v2";
+const CLOUD_TOKEN_KEY = "trip-planner-github-token";
+const CLOUD_DATA_PATH = "data/trip-planner.json";
+const CLOUD_REPO = {
+  owner: "Oridin",
+  repo: "TripPlanner",
+  liveBranch: "gh-pages",
+  backupBranch: "main",
+};
 
 const defaultCategories = {
   flight: { label: "Flights", color: "#45b36b" },
@@ -57,6 +65,8 @@ let state = loadState();
 let activeFilter = "all";
 let pointerDrag = null;
 let resizeDrag = null;
+let cloudSaveTimer = null;
+let isLoadingCloud = false;
 
 const calendarGrid = document.querySelector("#calendarGrid");
 const categoryStrip = document.querySelector("#categoryStrip");
@@ -77,6 +87,8 @@ const eventNotes = document.querySelector("#eventNotes");
 const eventCategory = document.querySelector("#eventCategory");
 const dialogTitle = document.querySelector("#dialogTitle");
 const deleteEventBtn = document.querySelector("#deleteEventBtn");
+const cloudSyncBtn = document.querySelector("#cloudSyncBtn");
+const cloudStatus = document.querySelector("#cloudStatus");
 
 function loadState() {
   const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
@@ -144,8 +156,9 @@ function normalizeEvent(event) {
   };
 }
 
-function saveState() {
+function saveState({ sync = true } = {}) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (sync && !isLoadingCloud) scheduleCloudSave();
 }
 
 function currentTrip() {
@@ -193,8 +206,8 @@ function buildCalendarDates() {
   const trip = currentTrip();
   const start = parseDate(trip.startDate);
   const end = parseDate(trip.endDate);
-  const first = addDays(start, -start.getDay());
-  const last = addDays(end, 6 - end.getDay());
+  const first = addDays(start, -mondayOffset(start));
+  const last = addDays(end, 6 - mondayOffset(end));
   const dates = [];
 
   for (let day = first; day <= last; day = addDays(day, 1)) {
@@ -202,6 +215,10 @@ function buildCalendarDates() {
   }
 
   return dates;
+}
+
+function mondayOffset(date) {
+  return (date.getDay() + 6) % 7;
 }
 
 function eventTouchesDate(event, dateKey) {
@@ -707,6 +724,125 @@ function slugify(value) {
     .replace(/^-|-$/g, "") || crypto.randomUUID();
 }
 
+async function loadCloudState() {
+  isLoadingCloud = true;
+  try {
+    const response = await fetch(`${CLOUD_DATA_PATH}?v=${Date.now()}`, { cache: "no-store" });
+    if (!response.ok) {
+      setCloudStatus("Shared plan not found yet. Local edits will save on this device.");
+      return;
+    }
+
+    state = normalizeState(await response.json());
+    saveState({ sync: false });
+    render();
+    setCloudStatus(hasCloudToken() ? "Shared plan loaded. Cloud sync is on." : "Shared plan loaded. Add a token to publish edits.");
+  } catch {
+    setCloudStatus("Could not load shared plan. Using local copy.");
+  } finally {
+    isLoadingCloud = false;
+  }
+}
+
+function hasCloudToken() {
+  return Boolean(localStorage.getItem(CLOUD_TOKEN_KEY));
+}
+
+function setCloudStatus(message) {
+  cloudStatus.textContent = message;
+}
+
+function setupCloudSync() {
+  const existing = localStorage.getItem(CLOUD_TOKEN_KEY);
+  const message = existing
+    ? "Cloud sync is on. Paste a new GitHub token to replace it, or leave blank to keep the current token."
+    : "Paste a GitHub fine-grained token with Contents read/write access to Oridin/TripPlanner.";
+  const token = prompt(message);
+
+  if (token === null) return;
+  if (token.trim()) localStorage.setItem(CLOUD_TOKEN_KEY, token.trim());
+  if (!hasCloudToken()) {
+    setCloudStatus("Cloud sync needs a GitHub token before it can publish edits.");
+    return;
+  }
+
+  publishCloudState();
+}
+
+function scheduleCloudSave() {
+  if (!hasCloudToken()) {
+    setCloudStatus("Saved locally. Add a GitHub token to sync across devices.");
+    return;
+  }
+
+  clearTimeout(cloudSaveTimer);
+  setCloudStatus("Saving to cloud...");
+  cloudSaveTimer = setTimeout(() => publishCloudState(), 900);
+}
+
+async function publishCloudState() {
+  if (!hasCloudToken()) return;
+
+  try {
+    await uploadCloudBranch(CLOUD_REPO.liveBranch);
+    await uploadCloudBranch(CLOUD_REPO.backupBranch).catch(() => {});
+    setCloudStatus(`Cloud synced ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}.`);
+  } catch (error) {
+    setCloudStatus(`Cloud sync failed: ${error.message}`);
+  }
+}
+
+async function uploadCloudBranch(branch) {
+  const token = localStorage.getItem(CLOUD_TOKEN_KEY);
+  const url = `https://api.github.com/repos/${CLOUD_REPO.owner}/${CLOUD_REPO.repo}/contents/${CLOUD_DATA_PATH}`;
+  const current = await fetch(`${url}?ref=${encodeURIComponent(branch)}`, {
+    headers: githubHeaders(token),
+  });
+
+  let sha = null;
+  if (current.ok) {
+    sha = (await current.json()).sha;
+  } else if (current.status !== 404) {
+    throw new Error(`GitHub returned ${current.status}`);
+  }
+
+  const body = {
+    branch,
+    message: "Update shared trip planner data",
+    content: toBase64(JSON.stringify(state, null, 2)),
+  };
+  if (sha) body.sha = sha;
+
+  const response = await fetch(url, {
+    method: "PUT",
+    headers: githubHeaders(token),
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const details = await response.json().catch(() => ({}));
+    throw new Error(details.message || `GitHub returned ${response.status}`);
+  }
+}
+
+function githubHeaders(token) {
+  return {
+    Accept: "application/vnd.github+json",
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json",
+    "X-GitHub-Api-Version": "2022-11-28",
+  };
+}
+
+function toBase64(value) {
+  const bytes = new TextEncoder().encode(value);
+  let binary = "";
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  return btoa(binary);
+}
+
 eventForm.addEventListener("submit", (event) => {
   if (event.submitter?.value === "cancel") return;
   event.preventDefault();
@@ -726,6 +862,7 @@ deleteEventBtn.addEventListener("click", () => {
 document.querySelector("#newTripBtn").addEventListener("click", createTrip);
 document.querySelector("#addEventBtn").addEventListener("click", () => openDialog());
 document.querySelector("#addCategoryBtn").addEventListener("click", createCategory);
+cloudSyncBtn.addEventListener("click", setupCloudSync);
 
 tripSelect.addEventListener("change", (event) => {
   state.activeTripId = event.target.value;
@@ -773,3 +910,4 @@ document.querySelector("#importInput").addEventListener("change", async (event) 
 });
 
 render();
+loadCloudState();

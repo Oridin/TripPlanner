@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Trip Planner</title>
-    <link rel="stylesheet" href="styles.css?v=20260610-5">
+    <link rel="stylesheet" href="styles.css?v=20260610-6">
   </head>
   <body>
     <main class="app-shell">
@@ -22,6 +22,7 @@
             <div class="topbar-actions">
               <button id="newTripBtn" class="ghost-button" type="button">New trip</button>
               <button id="addEventBtn" class="primary-button" type="button">Add item</button>
+              <button id="cloudSyncBtn" class="ghost-button" type="button">Cloud sync</button>
               <button id="exportBtn" class="ghost-button" type="button">Export</button>
               <label class="ghost-button file-button">
                 Import
@@ -51,6 +52,8 @@
             </label>
           </section>
 
+          <p id="cloudStatus" class="cloud-status" aria-live="polite">Loading shared plan...</p>
+
           <section class="category-strip" aria-label="Planner categories">
             <div id="categoryStrip" class="category-list"></div>
             <button id="addCategoryBtn" class="plain-button" type="button">New category</button>
@@ -58,13 +61,13 @@
 
           <section class="calendar-wrap">
             <div class="weekday-row" aria-hidden="true">
-              <span>Sunday</span>
               <span>Monday</span>
               <span>Tuesday</span>
               <span>Wednesday</span>
               <span>Thursday</span>
               <span>Friday</span>
               <span>Saturday</span>
+              <span>Sunday</span>
             </div>
             <div id="calendarGrid" class="calendar-grid" aria-live="polite"></div>
           </section>
@@ -124,6 +127,6 @@
       </form>
     </dialog>
 
-    <script src="app.js?v=20260610-5"></script>
+    <script src="app.js?v=20260610-6"></script>
   </body>
 </html>
