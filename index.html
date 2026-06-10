@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sydney Visa Trip Planner</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="planner-frame" aria-label="Sydney visa trip calendar planner">
+        <aside class="vertical-title">
+          <span id="rangeTitle">Jul-Aug 2026</span>
+        </aside>
+
+        <section class="planner-main">
+          <header class="topbar">
+            <div>
+              <p class="eyebrow">Philadelphia to Sydney</p>
+              <h1>Sydney Visa Trip Planner</h1>
+            </div>
+            <div class="topbar-actions">
+              <button id="addEventBtn" class="primary-button" type="button">Add item</button>
+              <button id="exportBtn" class="ghost-button" type="button">Export</button>
+              <label class="ghost-button file-button">
+                Import
+                <input id="importInput" type="file" accept="application/json">
+              </label>
+            </div>
+          </header>
+
+          <section class="controls" aria-label="Trip settings">
+            <label>
+              Trip starts
+              <input id="startDate" type="date">
+            </label>
+            <label>
+              Mark until
+              <input id="endDate" type="date">
+            </label>
+            <label>
+              Show
+              <select id="categoryFilter">
+                <option value="all">All categories</option>
+              </select>
+            </label>
+            <button id="resetBtn" class="plain-button" type="button">Reset sample plan</button>
+          </section>
+
+          <section class="category-strip" id="categoryStrip" aria-label="Planner categories"></section>
+
+          <section class="calendar-wrap">
+            <div class="weekday-row" aria-hidden="true">
+              <span>Sunday</span>
+              <span>Monday</span>
+              <span>Tuesday</span>
+              <span>Wednesday</span>
+              <span>Thursday</span>
+              <span>Friday</span>
+              <span>Saturday</span>
+            </div>
+            <div id="calendarGrid" class="calendar-grid" aria-live="polite"></div>
+          </section>
+        </section>
+      </section>
+    </main>
+
+    <dialog id="eventDialog" class="event-dialog">
+      <form id="eventForm" method="dialog">
+        <header>
+          <h2 id="dialogTitle">Add item</h2>
+          <button class="icon-button" value="cancel" type="submit" aria-label="Close">x</button>
+        </header>
+
+        <input id="eventId" type="hidden">
+        <label>
+          Title
+          <input id="eventTitle" type="text" required maxlength="80" placeholder="Visa appointment, family lunch...">
+        </label>
+        <div class="form-grid">
+          <label>
+            Date
+            <input id="eventDate" type="date" required>
+          </label>
+          <label>
+            Category
+            <select id="eventCategory" required></select>
+          </label>
+        </div>
+        <div class="form-grid">
+          <label>
+            Time
+            <input id="eventTime" type="text" maxlength="24" placeholder="10:30 AM">
+          </label>
+          <label>
+            Location
+            <input id="eventLocation" type="text" maxlength="80" placeholder="Sydney CBD">
+          </label>
+        </div>
+        <label>
+          Notes
+          <textarea id="eventNotes" rows="4" maxlength="280" placeholder="Confirmation numbers, who is going, packing reminders..."></textarea>
+        </label>
+
+        <menu class="dialog-actions">
+          <button id="deleteEventBtn" class="danger-button" type="button">Delete</button>
+          <span></span>
+          <button class="ghost-button" value="cancel" type="submit">Cancel</button>
+          <button id="saveEventBtn" class="primary-button" value="default" type="submit">Save</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <script src="app.js"></script>
+  </body>
+</html>
