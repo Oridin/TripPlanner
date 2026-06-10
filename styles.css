@@ -44,7 +44,7 @@ label.file-button {
   min-height: calc(100vh - 68px);
   display: grid;
   grid-template-columns: 132px minmax(0, 1fr);
-  background: var(--paper);
+  background: var(--buster-blue);
   box-shadow: var(--shadow);
   padding: 30px;
 }
