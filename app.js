@@ -1,11 +1,13 @@
-const STORAGE_KEY = "trip-planner-v3";
+const STORAGE_KEY = "trip-planner-v4";
 const LEGACY_STORAGE_KEY = "sydney-visa-trip-planner-v2";
 
 const defaultCategories = {
   flight: { label: "Flights", color: "#45b36b" },
+  travel: { label: "Travel / drives", color: "#2f9cf4" },
   appointment: { label: "Appointments", color: "#e65757" },
   family: { label: "Family visits", color: "#f0b442" },
   accommodation: { label: "Accommodation", color: "#4f8fe8" },
+  open: { label: "Open / TBD", color: "#a4a8b0" },
   task: { label: "Tasks", color: "#9b6be8" },
 };
 
@@ -17,58 +19,39 @@ const defaultTrip = {
   endDate: "2026-07-09",
   categories: defaultCategories,
   events: [
-    {
-      id: crypto.randomUUID(),
-      title: "Fly Philadelphia to Sydney",
-      startDate: "2026-06-14",
-      endDate: "2026-06-14",
-      time: "Departure day",
-      location: "Philadelphia",
-      notes: "Update with terminal, flight numbers, and connection details.",
-      category: "flight",
-    },
-    {
-      id: crypto.randomUUID(),
-      title: "Arrive and settle in",
-      startDate: "2026-06-16",
-      endDate: "2026-06-16",
-      time: "",
-      location: "Sydney",
-      notes: "Add accommodation check-in and transport notes.",
-      category: "accommodation",
-    },
-    {
-      id: crypto.randomUUID(),
-      title: "Visa renewal appointment",
-      startDate: "2026-06-22",
-      endDate: "2026-06-22",
-      time: "",
-      location: "Sydney",
-      notes: "Placeholder. Move once appointment is confirmed.",
-      category: "appointment",
-    },
-    {
-      id: crypto.randomUUID(),
-      title: "Dad returns to Philadelphia",
-      startDate: "2026-07-03",
-      endDate: "2026-07-03",
-      time: "",
-      location: "Sydney Airport",
-      notes: "Update with flight number and departure time.",
-      category: "flight",
-    },
-    {
-      id: crypto.randomUUID(),
-      title: "Mum and kids return",
-      startDate: "2026-07-09",
-      endDate: "2026-07-09",
-      time: "",
-      location: "Sydney Airport",
-      notes: "Update with flight number and departure time.",
-      category: "flight",
-    },
+    tripEvent("depart-philadelphia", "Depart Philadelphia", "2026-06-14", "2026-06-14", "Departure day", "PHL -> Sydney", "International flight to Sydney. Overnight in transit.", "flight"),
+    tripEvent("in-transit-date-line", "In transit / date line", "2026-06-15", "2026-06-15", "", "En route to Sydney", "Day lost crossing the International Date Line.", "flight"),
+    tripEvent("arrive-sydney", "Arrive Sydney + hire car", "2026-06-16", "2026-06-16", "7:00 AM", "Sydney Airport", "Arrive, pick up hire car, drive to hotel in North Sydney.", "flight"),
+    tripEvent("north-sydney-hotel", "North Sydney hotel", "2026-06-16", "2026-06-16", "", "North Sydney", "Sleep location after arrival.", "accommodation"),
+    tripEvent("mick-visa", "Mick visa appointment", "2026-06-17", "2026-06-17", "8:00 AM", "North Sydney", "Appointment day.", "appointment"),
+    tripEvent("drive-bathurst", "Drive to Bathurst", "2026-06-17", "2026-06-17", "After appointment", "North Sydney -> Bathurst", "Approx. 3 hour drive after Mick's appointment.", "travel"),
+    tripEvent("bathurst-stay", "Bathurst", "2026-06-17", "2026-06-20", "", "Bathurst", "Sleep location and base for open Bathurst days.", "accommodation"),
+    tripEvent("bathurst-open", "Bathurst open days", "2026-06-18", "2026-06-20", "", "Bathurst", "Activities TBD.", "open"),
+    tripEvent("drive-moss-vale", "Drive to Moss Vale", "2026-06-21", "2026-06-21", "", "Bathurst -> Moss Vale", "Approx. 3 hour drive.", "travel"),
+    tripEvent("family-dinner", "Family dinner", "2026-06-21", "2026-06-21", "Evening", "Moss Vale", "Family dinner in the evening.", "family"),
+    tripEvent("moss-vale-stay-1", "Moss Vale stay", "2026-06-21", "2026-06-25", "", "Moss Vale", "Sleep location.", "accommodation"),
+    tripEvent("moss-vale-family-1", "Moss Vale family time", "2026-06-22", "2026-06-25", "", "Moss Vale", "Activities TBD.", "family"),
+    tripEvent("drive-wollongong", "Drive to Wollongong", "2026-06-26", "2026-06-26", "", "Moss Vale -> Wollongong", "Approx. 1 hour drive.", "travel"),
+    tripEvent("wollongong-stay", "Wollongong", "2026-06-26", "2026-06-29", "", "Wollongong", "Sleep location and activities TBD.", "accommodation"),
+    tripEvent("wollongong-open", "Wollongong activities TBD", "2026-06-26", "2026-06-29", "", "Wollongong", "Open days for Wollongong plans.", "open"),
+    tripEvent("drive-north-sydney", "Drive to North Sydney", "2026-06-30", "2026-06-30", "", "Wollongong -> North Sydney", "Stay overnight ahead of Liz's visa appointment. Approx. 1.5 hour drive.", "travel"),
+    tripEvent("north-sydney-overnight", "North Sydney overnight", "2026-06-30", "2026-06-30", "", "North Sydney", "Overnight before Liz's appointment.", "accommodation"),
+    tripEvent("liz-visa", "Liz visa appointment", "2026-07-01", "2026-07-01", "8:30 AM", "North Sydney", "Visa appointment in North Sydney.", "appointment"),
+    tripEvent("sydney-family-activities", "Sydney family activities", "2026-07-01", "2026-07-02", "", "Sydney", "Fun Sydney family activities. July 1 sleep location assumed Sydney; confirm.", "family"),
+    tripEvent("sydney-stay", "Sydney stay", "2026-07-01", "2026-07-02", "", "Sydney CBD / confirm", "Likely Sydney accommodation across July 1 and 2; confirm details.", "accommodation"),
+    tripEvent("mick-flies-out", "Mick flies out", "2026-07-03", "2026-07-03", "", "Sydney Airport", "Mick departs Australia.", "flight"),
+    tripEvent("liz-kids-to-moss-vale", "Liz + kids drive to Moss Vale", "2026-07-03", "2026-07-03", "", "Sydney CBD -> Moss Vale", "Liz and kids drive back after Mick flies out.", "travel"),
+    tripEvent("moss-vale-stay-2", "Moss Vale stay", "2026-07-03", "2026-07-07", "", "Moss Vale", "Liz + kids sleep location.", "accommodation"),
+    tripEvent("moss-vale-family-2", "Liz + kids family time", "2026-07-04", "2026-07-07", "", "Moss Vale", "Family time / activities TBD.", "family"),
+    tripEvent("airport-hotel-drive", "Drive to Sydney Airport hotel", "2026-07-08", "2026-07-08", "", "Moss Vale -> Sydney Airport", "Liz + kids drive to Sydney Airport and stay at airport hotel.", "travel"),
+    tripEvent("airport-hotel", "Sydney Airport hotel", "2026-07-08", "2026-07-08", "", "Sydney Airport", "Airport hotel before departure.", "accommodation"),
+    tripEvent("trip-ends", "Trip ends / return TBD", "2026-07-09", "2026-07-09", "", "TBD", "Departure / return details still to be added.", "open"),
   ],
 };
+
+function tripEvent(id, title, startDate, endDate, time, location, notes, category) {
+  return { id, title, startDate, endDate, time, location, notes, category };
+}
 
 let state = loadState();
 let activeFilter = "all";
