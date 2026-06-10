@@ -1,6 +1,6 @@
-# Sydney Visa Trip Planner
+# Trip Planner
 
-Static calendar planner for the June 14 to July 9 Sydney visa trip window.
+Static calendar planner for trips, appointments, accommodation, family visits, and travel milestones.
 
 ## Publish on GitHub Pages
 
@@ -9,6 +9,6 @@ Static calendar planner for the June 14 to July 9 Sydney visa trip window.
 3. In GitHub, open **Settings > Pages**.
 4. Set the source to the main branch and root folder.
 
-The planner saves changes in the browser with `localStorage`. Use **Export** to download a JSON backup and **Import** to load that backup on another device or browser.
+The planner saves trips, categories, and events in the browser with `localStorage`. Use **Export** to download a JSON backup and **Import** to load that backup on another device or browser.
 
-The default return dates are July 3 for Dad and July 9 for Mum and kids.
+The starter trip is set up for the June 14 to July 9 Sydney visa trip window.

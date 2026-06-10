@@ -1,4 +1,5 @@
-const STORAGE_KEY = "sydney-visa-trip-planner-v2";
+const STORAGE_KEY = "trip-planner-v3";
+const LEGACY_STORAGE_KEY = "sydney-visa-trip-planner-v2";
 
 const defaultCategories = {
   flight: { label: "Flights", color: "#45b36b" },
@@ -8,7 +9,10 @@ const defaultCategories = {
   task: { label: "Tasks", color: "#9b6be8" },
 };
 
-const defaultState = {
+const defaultTrip = {
+  id: "sydney-visa-2026",
+  name: "Sydney Visa Trip",
+  tagline: "Philadelphia to Sydney",
   startDate: "2026-06-14",
   endDate: "2026-07-09",
   categories: defaultCategories,
@@ -16,7 +20,8 @@ const defaultState = {
     {
       id: crypto.randomUUID(),
       title: "Fly Philadelphia to Sydney",
-      date: "2026-06-14",
+      startDate: "2026-06-14",
+      endDate: "2026-06-14",
       time: "Departure day",
       location: "Philadelphia",
       notes: "Update with terminal, flight numbers, and connection details.",
@@ -25,7 +30,8 @@ const defaultState = {
     {
       id: crypto.randomUUID(),
       title: "Arrive and settle in",
-      date: "2026-06-16",
+      startDate: "2026-06-16",
+      endDate: "2026-06-16",
       time: "",
       location: "Sydney",
       notes: "Add accommodation check-in and transport notes.",
@@ -34,7 +40,8 @@ const defaultState = {
     {
       id: crypto.randomUUID(),
       title: "Visa renewal appointment",
-      date: "2026-06-22",
+      startDate: "2026-06-22",
+      endDate: "2026-06-22",
       time: "",
       location: "Sydney",
       notes: "Placeholder. Move once appointment is confirmed.",
@@ -43,7 +50,8 @@ const defaultState = {
     {
       id: crypto.randomUUID(),
       title: "Dad returns to Philadelphia",
-      date: "2026-07-03",
+      startDate: "2026-07-03",
+      endDate: "2026-07-03",
       time: "",
       location: "Sydney Airport",
       notes: "Update with flight number and departure time.",
@@ -52,7 +60,8 @@ const defaultState = {
     {
       id: crypto.randomUUID(),
       title: "Mum and kids return",
-      date: "2026-07-09",
+      startDate: "2026-07-09",
+      endDate: "2026-07-09",
       time: "",
       location: "Sydney Airport",
       notes: "Update with flight number and departure time.",
@@ -68,6 +77,7 @@ let pointerDrag = null;
 const calendarGrid = document.querySelector("#calendarGrid");
 const categoryStrip = document.querySelector("#categoryStrip");
 const categoryFilter = document.querySelector("#categoryFilter");
+const tripSelect = document.querySelector("#tripSelect");
 const startDateInput = document.querySelector("#startDate");
 const endDateInput = document.querySelector("#endDate");
 const rangeTitle = document.querySelector("#rangeTitle");
@@ -75,7 +85,8 @@ const dialog = document.querySelector("#eventDialog");
 const eventForm = document.querySelector("#eventForm");
 const eventId = document.querySelector("#eventId");
 const eventTitle = document.querySelector("#eventTitle");
-const eventDate = document.querySelector("#eventDate");
+const eventStartDate = document.querySelector("#eventStartDate");
+const eventEndDate = document.querySelector("#eventEndDate");
 const eventTime = document.querySelector("#eventTime");
 const eventLocation = document.querySelector("#eventLocation");
 const eventNotes = document.querySelector("#eventNotes");
@@ -84,24 +95,82 @@ const dialogTitle = document.querySelector("#dialogTitle");
 const deleteEventBtn = document.querySelector("#deleteEventBtn");
 
 function loadState() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (!saved) return structuredClone(defaultState);
+  const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
+  if (!saved) return createDefaultState();
 
   try {
-    const parsed = JSON.parse(saved);
-    return {
-      ...structuredClone(defaultState),
-      ...parsed,
-      categories: { ...defaultCategories, ...(parsed.categories || {}) },
-      events: Array.isArray(parsed.events) ? parsed.events : defaultState.events,
-    };
+    return normalizeState(JSON.parse(saved));
   } catch {
-    return structuredClone(defaultState);
+    return createDefaultState();
   }
+}
+
+function createDefaultState() {
+  return {
+    activeTripId: defaultTrip.id,
+    trips: [structuredClone(defaultTrip)],
+  };
+}
+
+function normalizeState(saved) {
+  if (Array.isArray(saved.trips)) {
+    const trips = saved.trips.map(normalizeTrip);
+    return {
+      activeTripId: trips.some((trip) => trip.id === saved.activeTripId) ? saved.activeTripId : trips[0]?.id,
+      trips: trips.length ? trips : [structuredClone(defaultTrip)],
+    };
+  }
+
+  const migratedTrip = normalizeTrip({
+    id: "sydney-visa-2026",
+    name: "Sydney Visa Trip",
+    tagline: "Philadelphia to Sydney",
+    ...saved,
+  });
+
+  return {
+    activeTripId: migratedTrip.id,
+    trips: [migratedTrip],
+  };
+}
+
+function normalizeTrip(trip) {
+  return {
+    id: trip.id || crypto.randomUUID(),
+    name: trip.name || "Untitled Trip",
+    tagline: trip.tagline || "",
+    startDate: trip.startDate || "2026-06-14",
+    endDate: trip.endDate || "2026-07-09",
+    categories: { ...defaultCategories, ...(trip.categories || {}) },
+    events: Array.isArray(trip.events) ? trip.events.map(normalizeEvent) : [],
+  };
+}
+
+function normalizeEvent(event) {
+  const startDate = event.startDate || event.date || defaultTrip.startDate;
+  return {
+    id: event.id || crypto.randomUUID(),
+    title: event.title || "Untitled item",
+    startDate,
+    endDate: event.endDate || startDate,
+    time: event.time || "",
+    location: event.location || "",
+    notes: event.notes || "",
+    category: event.category || "task",
+  };
 }
 
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function currentTrip() {
+  let trip = state.trips.find((entry) => entry.id === state.activeTripId);
+  if (!trip) {
+    trip = state.trips[0] || structuredClone(defaultTrip);
+    state.activeTripId = trip.id;
+  }
+  return trip;
 }
 
 function parseDate(value) {
@@ -122,13 +191,14 @@ function addDays(date, days) {
   return next;
 }
 
-function sameDay(a, b) {
-  return formatDate(a) === formatDate(b);
+function daysBetween(startDate, endDate) {
+  return Math.max(0, Math.round((parseDate(endDate) - parseDate(startDate)) / 86400000));
 }
 
 function formatRangeTitle() {
-  const start = parseDate(state.startDate);
-  const end = parseDate(state.endDate);
+  const trip = currentTrip();
+  const start = parseDate(trip.startDate);
+  const end = parseDate(trip.endDate);
   const startMonth = start.toLocaleDateString("en-US", { month: "short" });
   const endMonth = end.toLocaleDateString("en-US", { month: "short" });
   const months = startMonth === endMonth ? startMonth : `${startMonth}-${endMonth}`;
@@ -136,8 +206,9 @@ function formatRangeTitle() {
 }
 
 function buildCalendarDates() {
-  const start = parseDate(state.startDate);
-  const end = parseDate(state.endDate);
+  const trip = currentTrip();
+  const start = parseDate(trip.startDate);
+  const end = parseDate(trip.endDate);
   const first = addDays(start, -start.getDay());
   const last = addDays(end, 6 - end.getDay());
   const dates = [];
@@ -149,27 +220,46 @@ function buildCalendarDates() {
   return dates;
 }
 
+function eventTouchesDate(event, dateKey) {
+  return event.startDate <= dateKey && event.endDate >= dateKey;
+}
+
 function getVisibleEvents(dateKey) {
-  return state.events
-    .filter((event) => event.date === dateKey)
+  const trip = currentTrip();
+  return trip.events
+    .filter((event) => eventTouchesDate(event, dateKey))
     .filter((event) => activeFilter === "all" || event.category === activeFilter)
-    .sort((a, b) => (a.time || "").localeCompare(b.time || ""));
+    .sort((a, b) => a.startDate.localeCompare(b.startDate) || (a.time || "").localeCompare(b.time || ""));
 }
 
 function render() {
-  startDateInput.value = state.startDate;
-  endDateInput.value = state.endDate;
+  const trip = currentTrip();
+  document.querySelector("h1").textContent = trip.name;
+  document.querySelector(".eyebrow").textContent = trip.tagline || "Trip planner";
+  tripSelect.value = trip.id;
+  startDateInput.value = trip.startDate;
+  endDateInput.value = trip.endDate;
   formatRangeTitle();
+  renderTrips();
   renderCategoryControls();
   renderCalendar();
 }
 
+function renderTrips() {
+  tripSelect.innerHTML = "";
+  state.trips.forEach((trip) => {
+    tripSelect.append(new Option(trip.name, trip.id));
+  });
+  tripSelect.value = currentTrip().id;
+}
+
 function renderCategoryControls() {
+  const trip = currentTrip();
   categoryStrip.innerHTML = "";
   categoryFilter.innerHTML = '<option value="all">All categories</option>';
   eventCategory.innerHTML = "";
 
-  Object.entries(state.categories).forEach(([key, category]) => {
+  Object.entries(trip.categories).forEach(([key, category]) => {
     const option = new Option(category.label, key);
     categoryFilter.append(option.cloneNode(true));
     eventCategory.append(option);
@@ -181,19 +271,21 @@ function renderCategoryControls() {
       <span>${category.label}</span>
     `;
     pill.querySelector("input").addEventListener("input", (event) => {
-      state.categories[key].color = event.target.value;
+      currentTrip().categories[key].color = event.target.value;
       saveState();
       renderCalendar();
     });
     categoryStrip.append(pill);
   });
 
+  if (!trip.categories[activeFilter] && activeFilter !== "all") activeFilter = "all";
   categoryFilter.value = activeFilter;
 }
 
 function renderCalendar() {
-  const tripStart = parseDate(state.startDate);
-  const tripEnd = parseDate(state.endDate);
+  const trip = currentTrip();
+  const tripStart = parseDate(trip.startDate);
+  const tripEnd = parseDate(trip.endDate);
   calendarGrid.innerHTML = "";
 
   buildCalendarDates().forEach((date) => {
@@ -209,18 +301,16 @@ function renderCalendar() {
     `;
 
     const stack = cell.querySelector(".event-stack");
-    getVisibleEvents(dateKey).forEach((event) => stack.append(createEventCard(event)));
+    getVisibleEvents(dateKey).forEach((event) => stack.append(createEventCard(event, dateKey)));
 
-    cell.querySelector(".add-day-button").addEventListener("click", () => openDialog({ date: dateKey }));
-    cell.addEventListener("dragover", onDragOver);
-    cell.addEventListener("dragleave", onDragLeave);
-    cell.addEventListener("drop", onDrop);
+    cell.querySelector(".add-day-button").addEventListener("click", () => openDialog({ startDate: dateKey, endDate: dateKey }));
     calendarGrid.append(cell);
   });
 }
 
-function createEventCard(event) {
-  const category = state.categories[event.category] || defaultCategories.task;
+function createEventCard(event, dateKey) {
+  const trip = currentTrip();
+  const category = trip.categories[event.category] || defaultCategories.task;
   const card = document.createElement("button");
   card.type = "button";
   card.className = "event-card";
@@ -228,10 +318,17 @@ function createEventCard(event) {
   card.style.setProperty("--event-color", category.color);
   card.style.borderLeftColor = category.color;
 
-  const details = [event.time, event.location].filter(Boolean).join(" · ");
+  if (event.startDate !== event.endDate) {
+    card.classList.add("multi-day");
+    if (dateKey === event.startDate) card.classList.add("span-start");
+    if (dateKey === event.endDate) card.classList.add("span-end");
+  }
+
+  const details = [event.time, event.location].filter(Boolean).join(" - ");
+  const span = event.startDate !== event.endDate ? `${formatShortDate(event.startDate)} to ${formatShortDate(event.endDate)}` : "";
   card.innerHTML = `
     <span class="event-title">${escapeHtml(event.title)}</span>
-    ${details ? `<span class="event-meta">${escapeHtml(details)}</span>` : ""}
+    ${details || span ? `<span class="event-meta">${escapeHtml([details, span].filter(Boolean).join(" - "))}</span>` : ""}
   `;
 
   card.addEventListener("click", () => {
@@ -243,6 +340,10 @@ function createEventCard(event) {
   return card;
 }
 
+function formatShortDate(dateKey) {
+  return parseDate(dateKey).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
 function escapeHtml(value) {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -250,26 +351,6 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
-}
-
-function onDragOver(event) {
-  event.preventDefault();
-  event.currentTarget.classList.add("drop-target");
-}
-
-function onDragLeave(event) {
-  event.currentTarget.classList.remove("drop-target");
-}
-
-function onDrop(event) {
-  event.preventDefault();
-  const id = event.dataTransfer.getData("text/plain");
-  const item = state.events.find((entry) => entry.id === id);
-  if (item) {
-    item.date = event.currentTarget.dataset.date;
-    saveState();
-    renderCalendar();
-  }
 }
 
 function startPointerDrag(event, id) {
@@ -299,14 +380,7 @@ function startTouchDrag(event, id) {
 }
 
 function beginDrag(card, id, startX, startY) {
-  pointerDrag = {
-    id,
-    card,
-    startX,
-    startY,
-    active: false,
-    clone: null,
-  };
+  pointerDrag = { id, card, startX, startY, active: false, clone: null };
 }
 
 function onPointerMove(event) {
@@ -374,9 +448,11 @@ function finishDrag(clientX, clientY) {
 
   if (active) {
     const target = getDropCell(clientX, clientY);
-    const item = state.events.find((entry) => entry.id === id);
+    const item = currentTrip().events.find((entry) => entry.id === id);
     if (target && item) {
-      item.date = target.dataset.date;
+      const duration = daysBetween(item.startDate, item.endDate);
+      item.startDate = target.dataset.date;
+      item.endDate = formatDate(addDays(parseDate(item.startDate), duration));
       saveState();
     }
     clone?.remove();
@@ -412,7 +488,8 @@ function openDialog(event = {}) {
   dialogTitle.textContent = isEditing ? "Edit item" : "Add item";
   eventId.value = event.id || "";
   eventTitle.value = event.title || "";
-  eventDate.value = event.date || state.startDate;
+  eventStartDate.value = event.startDate || currentTrip().startDate;
+  eventEndDate.value = event.endDate || event.startDate || currentTrip().startDate;
   eventTime.value = event.time || "";
   eventLocation.value = event.location || "";
   eventNotes.value = event.notes || "";
@@ -422,21 +499,69 @@ function openDialog(event = {}) {
 }
 
 function saveEvent() {
+  const startDate = eventStartDate.value;
+  const endDate = eventEndDate.value < startDate ? startDate : eventEndDate.value;
   const payload = {
     id: eventId.value || crypto.randomUUID(),
     title: eventTitle.value.trim(),
-    date: eventDate.value,
+    startDate,
+    endDate,
     time: eventTime.value.trim(),
     location: eventLocation.value.trim(),
     notes: eventNotes.value.trim(),
     category: eventCategory.value,
   };
 
-  const existingIndex = state.events.findIndex((event) => event.id === payload.id);
-  if (existingIndex >= 0) state.events[existingIndex] = payload;
-  else state.events.push(payload);
+  const trip = currentTrip();
+  const existingIndex = trip.events.findIndex((event) => event.id === payload.id);
+  if (existingIndex >= 0) trip.events[existingIndex] = payload;
+  else trip.events.push(payload);
   saveState();
   render();
+}
+
+function createTrip() {
+  const name = prompt("Trip name");
+  if (!name?.trim()) return;
+  const today = new Date();
+  const trip = {
+    id: crypto.randomUUID(),
+    name: name.trim(),
+    tagline: "Trip planner",
+    startDate: formatDate(today),
+    endDate: formatDate(addDays(today, 14)),
+    categories: structuredClone(defaultCategories),
+    events: [],
+  };
+  state.trips.push(trip);
+  state.activeTripId = trip.id;
+  activeFilter = "all";
+  saveState();
+  render();
+}
+
+function createCategory() {
+  const label = prompt("Category name");
+  if (!label?.trim()) return;
+  const key = slugify(label);
+  const trip = currentTrip();
+  let categoryKey = key;
+  let index = 2;
+  while (trip.categories[categoryKey]) {
+    categoryKey = `${key}-${index}`;
+    index += 1;
+  }
+  trip.categories[categoryKey] = { label: label.trim(), color: "#2f9cf4" };
+  saveState();
+  renderCategoryControls();
+}
+
+function slugify(value) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "") || crypto.randomUUID();
 }
 
 eventForm.addEventListener("submit", (event) => {
@@ -448,13 +573,23 @@ eventForm.addEventListener("submit", (event) => {
 });
 
 deleteEventBtn.addEventListener("click", () => {
-  state.events = state.events.filter((event) => event.id !== eventId.value);
+  const trip = currentTrip();
+  trip.events = trip.events.filter((event) => event.id !== eventId.value);
   saveState();
   render();
   dialog.close();
 });
 
+document.querySelector("#newTripBtn").addEventListener("click", createTrip);
 document.querySelector("#addEventBtn").addEventListener("click", () => openDialog());
+document.querySelector("#addCategoryBtn").addEventListener("click", createCategory);
+
+tripSelect.addEventListener("change", (event) => {
+  state.activeTripId = event.target.value;
+  activeFilter = "all";
+  saveState();
+  render();
+});
 
 categoryFilter.addEventListener("change", (event) => {
   activeFilter = event.target.value;
@@ -462,21 +597,14 @@ categoryFilter.addEventListener("change", (event) => {
 });
 
 startDateInput.addEventListener("change", (event) => {
-  state.startDate = event.target.value;
+  currentTrip().startDate = event.target.value;
   saveState();
   render();
 });
 
 endDateInput.addEventListener("change", (event) => {
-  state.endDate = event.target.value;
+  currentTrip().endDate = event.target.value;
   saveState();
-  render();
-});
-
-document.querySelector("#resetBtn").addEventListener("click", () => {
-  state = structuredClone(defaultState);
-  saveState();
-  activeFilter = "all";
   render();
 });
 
@@ -485,7 +613,7 @@ document.querySelector("#exportBtn").addEventListener("click", () => {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = "sydney-visa-trip-planner.json";
+  link.download = "trip-planner.json";
   link.click();
   URL.revokeObjectURL(url);
 });
@@ -494,12 +622,8 @@ document.querySelector("#importInput").addEventListener("change", async (event) 
   const [file] = event.target.files;
   if (!file) return;
   const text = await file.text();
-  const imported = JSON.parse(text);
-  state = {
-    ...structuredClone(defaultState),
-    ...imported,
-    categories: { ...defaultCategories, ...(imported.categories || {}) },
-  };
+  state = normalizeState(JSON.parse(text));
+  activeFilter = "all";
   saveState();
   render();
   event.target.value = "";

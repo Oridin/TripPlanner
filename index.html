@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Sydney Visa Trip Planner</title>
+    <title>Trip Planner</title>
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
@@ -20,6 +20,7 @@
               <h1>Sydney Visa Trip Planner</h1>
             </div>
             <div class="topbar-actions">
+              <button id="newTripBtn" class="ghost-button" type="button">New trip</button>
               <button id="addEventBtn" class="primary-button" type="button">Add item</button>
               <button id="exportBtn" class="ghost-button" type="button">Export</button>
               <label class="ghost-button file-button">
@@ -30,6 +31,10 @@
           </header>
 
           <section class="controls" aria-label="Trip settings">
+            <label>
+              Trip
+              <select id="tripSelect"></select>
+            </label>
             <label>
               Trip starts
               <input id="startDate" type="date">
@@ -44,10 +49,12 @@
                 <option value="all">All categories</option>
               </select>
             </label>
-            <button id="resetBtn" class="plain-button" type="button">Reset sample plan</button>
           </section>
 
-          <section class="category-strip" id="categoryStrip" aria-label="Planner categories"></section>
+          <section class="category-strip" aria-label="Planner categories">
+            <div id="categoryStrip" class="category-list"></div>
+            <button id="addCategoryBtn" class="plain-button" type="button">New category</button>
+          </section>
 
           <section class="calendar-wrap">
             <div class="weekday-row" aria-hidden="true">
@@ -79,19 +86,25 @@
         </label>
         <div class="form-grid">
           <label>
-            Date
-            <input id="eventDate" type="date" required>
+            Starts
+            <input id="eventStartDate" type="date" required>
           </label>
           <label>
-            Category
-            <select id="eventCategory" required></select>
+            Ends
+            <input id="eventEndDate" type="date" required>
           </label>
         </div>
         <div class="form-grid">
           <label>
+            Category
+            <select id="eventCategory" required></select>
+          </label>
+          <label>
             Time
             <input id="eventTime" type="text" maxlength="24" placeholder="10:30 AM">
           </label>
+        </div>
+        <div class="form-grid single-field">
           <label>
             Location
             <input id="eventLocation" type="text" maxlength="80" placeholder="Sydney CBD">
