@@ -8,42 +8,266 @@
       "startDate": "2026-06-14",
       "endDate": "2026-07-09",
       "categories": {
-        "flight": { "label": "Flights", "color": "#45b36b" },
-        "travel": { "label": "Travel / drives", "color": "#2f9cf4" },
-        "appointment": { "label": "Appointments", "color": "#e65757" },
-        "family": { "label": "Family visits", "color": "#f0b442" },
-        "accommodation": { "label": "Accommodation", "color": "#4f8fe8" },
-        "open": { "label": "Open / TBD", "color": "#a4a8b0" },
-        "task": { "label": "Tasks", "color": "#9b6be8" }
+        "flight": {
+          "label": "Flights",
+          "color": "#45b36b"
+        },
+        "travel": {
+          "label": "Travel / drives",
+          "color": "#2f9cf4"
+        },
+        "appointment": {
+          "label": "Appointments",
+          "color": "#e65757"
+        },
+        "family": {
+          "label": "Family visits",
+          "color": "#f0b442"
+        },
+        "accommodation": {
+          "label": "Accommodation",
+          "color": "#4f8fe8"
+        },
+        "open": {
+          "label": "Open / TBD",
+          "color": "#a4a8b0"
+        },
+        "task": {
+          "label": "Tasks",
+          "color": "#9b6be8"
+        }
       },
       "events": [
-        { "id": "depart-philadelphia", "title": "Depart Philadelphia", "startDate": "2026-06-14", "endDate": "2026-06-14", "time": "Departure day", "location": "PHL -> Sydney", "notes": "International flight to Sydney. Overnight in transit.", "category": "flight" },
-        { "id": "in-transit-date-line", "title": "In transit / date line", "startDate": "2026-06-15", "endDate": "2026-06-15", "time": "", "location": "En route to Sydney", "notes": "Day lost crossing the International Date Line.", "category": "flight" },
-        { "id": "arrive-sydney", "title": "Arrive Sydney + hire car", "startDate": "2026-06-16", "endDate": "2026-06-16", "time": "7:00 AM", "location": "Sydney Airport", "notes": "Arrive, pick up hire car, drive to hotel in North Sydney.", "category": "flight" },
-        { "id": "north-sydney-hotel", "title": "North Sydney hotel", "startDate": "2026-06-16", "endDate": "2026-06-16", "time": "", "location": "North Sydney", "notes": "Sleep location after arrival.", "category": "accommodation" },
-        { "id": "mick-visa", "title": "Mick visa appointment", "startDate": "2026-06-17", "endDate": "2026-06-17", "time": "8:00 AM", "location": "North Sydney", "notes": "Appointment day.", "category": "appointment" },
-        { "id": "drive-bathurst", "title": "Drive to Bathurst", "startDate": "2026-06-17", "endDate": "2026-06-17", "time": "After appointment", "location": "North Sydney -> Bathurst", "notes": "Approx. 3 hour drive after Mick's appointment.", "category": "travel" },
-        { "id": "bathurst-stay", "title": "Bathurst", "startDate": "2026-06-17", "endDate": "2026-06-20", "time": "", "location": "Bathurst", "notes": "Sleep location and base for open Bathurst days.", "category": "accommodation" },
-        { "id": "bathurst-open", "title": "Bathurst open days", "startDate": "2026-06-18", "endDate": "2026-06-20", "time": "", "location": "Bathurst", "notes": "Activities TBD.", "category": "open" },
-        { "id": "drive-moss-vale", "title": "Drive to Moss Vale", "startDate": "2026-06-21", "endDate": "2026-06-21", "time": "", "location": "Bathurst -> Moss Vale", "notes": "Approx. 3 hour drive.", "category": "travel" },
-        { "id": "family-dinner", "title": "Family dinner", "startDate": "2026-06-21", "endDate": "2026-06-21", "time": "Evening", "location": "Moss Vale", "notes": "Family dinner in the evening.", "category": "family" },
-        { "id": "moss-vale-stay-1", "title": "Moss Vale stay", "startDate": "2026-06-21", "endDate": "2026-06-25", "time": "", "location": "Moss Vale", "notes": "Sleep location.", "category": "accommodation" },
-        { "id": "moss-vale-family-1", "title": "Moss Vale family time", "startDate": "2026-06-22", "endDate": "2026-06-25", "time": "", "location": "Moss Vale", "notes": "Activities TBD.", "category": "family" },
-        { "id": "drive-wollongong", "title": "Drive to Wollongong", "startDate": "2026-06-26", "endDate": "2026-06-26", "time": "", "location": "Moss Vale -> Wollongong", "notes": "Approx. 1 hour drive.", "category": "travel" },
-        { "id": "wollongong-stay", "title": "Wollongong", "startDate": "2026-06-26", "endDate": "2026-06-29", "time": "", "location": "Wollongong", "notes": "Sleep location and activities TBD.", "category": "accommodation" },
-        { "id": "wollongong-open", "title": "Wollongong activities TBD", "startDate": "2026-06-26", "endDate": "2026-06-29", "time": "", "location": "Wollongong", "notes": "Open days for Wollongong plans.", "category": "open" },
-        { "id": "drive-north-sydney", "title": "Drive to North Sydney", "startDate": "2026-06-30", "endDate": "2026-06-30", "time": "", "location": "Wollongong -> North Sydney", "notes": "Stay overnight ahead of Liz's visa appointment. Approx. 1.5 hour drive.", "category": "travel" },
-        { "id": "north-sydney-overnight", "title": "North Sydney overnight", "startDate": "2026-06-30", "endDate": "2026-06-30", "time": "", "location": "North Sydney", "notes": "Overnight before Liz's appointment.", "category": "accommodation" },
-        { "id": "liz-visa", "title": "Liz visa appointment", "startDate": "2026-07-01", "endDate": "2026-07-01", "time": "8:30 AM", "location": "North Sydney", "notes": "Visa appointment in North Sydney.", "category": "appointment" },
-        { "id": "sydney-family-activities", "title": "Sydney family activities", "startDate": "2026-07-01", "endDate": "2026-07-02", "time": "", "location": "Sydney", "notes": "Fun Sydney family activities. July 1 sleep location assumed Sydney; confirm.", "category": "family" },
-        { "id": "sydney-stay", "title": "Sydney stay", "startDate": "2026-07-01", "endDate": "2026-07-02", "time": "", "location": "Sydney CBD / confirm", "notes": "Likely Sydney accommodation across July 1 and 2; confirm details.", "category": "accommodation" },
-        { "id": "mick-flies-out", "title": "Mick flies out", "startDate": "2026-07-03", "endDate": "2026-07-03", "time": "", "location": "Sydney Airport", "notes": "Mick departs Australia.", "category": "flight" },
-        { "id": "liz-kids-to-moss-vale", "title": "Liz + kids drive to Moss Vale", "startDate": "2026-07-03", "endDate": "2026-07-03", "time": "", "location": "Sydney CBD -> Moss Vale", "notes": "Liz and kids drive back after Mick flies out.", "category": "travel" },
-        { "id": "moss-vale-stay-2", "title": "Moss Vale stay", "startDate": "2026-07-03", "endDate": "2026-07-07", "time": "", "location": "Moss Vale", "notes": "Liz + kids sleep location.", "category": "accommodation" },
-        { "id": "moss-vale-family-2", "title": "Liz + kids family time", "startDate": "2026-07-04", "endDate": "2026-07-07", "time": "", "location": "Moss Vale", "notes": "Family time / activities TBD.", "category": "family" },
-        { "id": "airport-hotel-drive", "title": "Drive to Sydney Airport hotel", "startDate": "2026-07-08", "endDate": "2026-07-08", "time": "", "location": "Moss Vale -> Sydney Airport", "notes": "Liz + kids drive to Sydney Airport and stay at airport hotel.", "category": "travel" },
-        { "id": "airport-hotel", "title": "Sydney Airport hotel", "startDate": "2026-07-08", "endDate": "2026-07-08", "time": "", "location": "Sydney Airport", "notes": "Airport hotel before departure.", "category": "accommodation" },
-        { "id": "trip-ends", "title": "Trip ends / return TBD", "startDate": "2026-07-09", "endDate": "2026-07-09", "time": "", "location": "TBD", "notes": "Departure / return details still to be added.", "category": "open" }
+        {
+          "id": "depart-philadelphia",
+          "title": "Depart Philadelphia",
+          "startDate": "2026-06-14",
+          "endDate": "2026-06-14",
+          "time": "Departure day",
+          "location": "PHL -> Sydney",
+          "notes": "International flight to Sydney. Overnight in transit.",
+          "category": "flight"
+        },
+        {
+          "id": "in-transit-date-line",
+          "title": "In transit / date line",
+          "startDate": "2026-06-15",
+          "endDate": "2026-06-15",
+          "time": "",
+          "location": "En route to Sydney",
+          "notes": "Day lost crossing the International Date Line.",
+          "category": "flight"
+        },
+        {
+          "id": "arrive-sydney",
+          "title": "Arrive Sydney + hire car",
+          "startDate": "2026-06-16",
+          "endDate": "2026-06-16",
+          "time": "7:00 AM",
+          "location": "Sydney Airport",
+          "notes": "Arrive, pick up hire car, drive to hotel in North Sydney.",
+          "category": "flight"
+        },
+        {
+          "id": "north-sydney-hotel",
+          "title": "North Sydney hotel",
+          "startDate": "2026-06-16",
+          "endDate": "2026-06-16",
+          "time": "",
+          "location": "North Sydney",
+          "notes": "Sleep location after arrival.",
+          "category": "accommodation"
+        },
+        {
+          "id": "mick-visa",
+          "title": "Mick visa appointment",
+          "startDate": "2026-06-17",
+          "endDate": "2026-06-17",
+          "time": "8:00 AM",
+          "location": "North Sydney",
+          "notes": "Appointment day.",
+          "category": "appointment"
+        },
+        {
+          "id": "drive-bathurst",
+          "title": "Drive to Bathurst",
+          "startDate": "2026-06-26",
+          "endDate": "2026-06-26",
+          "time": "After appointment",
+          "location": "North Sydney -> Bathurst",
+          "notes": "Approx. 3 hour drive after Mick's appointment.",
+          "category": "travel"
+        },
+        {
+          "id": "bathurst-stay",
+          "title": "Bathurst",
+          "startDate": "2026-06-26",
+          "endDate": "2026-06-29",
+          "time": "",
+          "location": "Bathurst",
+          "notes": "Sleep location and base for open Bathurst days.",
+          "category": "accommodation"
+        },
+        {
+          "id": "drive-moss-vale",
+          "title": "Drive to Moss Vale",
+          "startDate": "2026-06-21",
+          "endDate": "2026-06-21",
+          "time": "",
+          "location": "Bathurst -> Moss Vale",
+          "notes": "Approx. 3 hour drive.",
+          "category": "travel"
+        },
+        {
+          "id": "family-dinner",
+          "title": "Family dinner",
+          "startDate": "2026-06-21",
+          "endDate": "2026-06-21",
+          "time": "Evening",
+          "location": "Moss Vale",
+          "notes": "Family dinner in the evening.",
+          "category": "family"
+        },
+        {
+          "id": "moss-vale-stay-1",
+          "title": "Moss Vale stay",
+          "startDate": "2026-06-21",
+          "endDate": "2026-06-25",
+          "time": "",
+          "location": "Moss Vale",
+          "notes": "Sleep location.",
+          "category": "accommodation"
+        },
+        {
+          "id": "drive-wollongong",
+          "title": "Drive to Wollongong",
+          "startDate": "2026-06-17",
+          "endDate": "2026-06-17",
+          "time": "",
+          "location": "Moss Vale -> Wollongong",
+          "notes": "Approx. 1 hour drive.",
+          "category": "travel"
+        },
+        {
+          "id": "wollongong-stay",
+          "title": "Wollongong",
+          "startDate": "2026-06-17",
+          "endDate": "2026-06-20",
+          "time": "",
+          "location": "Wollongong",
+          "notes": "Sleep location and activities TBD.",
+          "category": "accommodation"
+        },
+        {
+          "id": "drive-north-sydney",
+          "title": "Drive to North Sydney",
+          "startDate": "2026-06-30",
+          "endDate": "2026-06-30",
+          "time": "",
+          "location": "Wollongong -> North Sydney",
+          "notes": "Stay overnight ahead of Liz's visa appointment. Approx. 1.5 hour drive.",
+          "category": "travel"
+        },
+        {
+          "id": "north-sydney-overnight",
+          "title": "North Sydney overnight",
+          "startDate": "2026-06-30",
+          "endDate": "2026-06-30",
+          "time": "",
+          "location": "North Sydney",
+          "notes": "Overnight before Liz's appointment.",
+          "category": "accommodation"
+        },
+        {
+          "id": "liz-visa",
+          "title": "Liz visa appointment",
+          "startDate": "2026-07-01",
+          "endDate": "2026-07-01",
+          "time": "8:30 AM",
+          "location": "North Sydney",
+          "notes": "Visa appointment in North Sydney.",
+          "category": "appointment"
+        },
+        {
+          "id": "sydney-stay",
+          "title": "Sydney stay",
+          "startDate": "2026-06-30",
+          "endDate": "2026-07-02",
+          "time": "",
+          "location": "Sydney CBD / confirm",
+          "notes": "Likely Sydney accommodation across July 1 and 2; confirm details.",
+          "category": "accommodation"
+        },
+        {
+          "id": "mick-flies-out",
+          "title": "Mick flies out",
+          "startDate": "2026-07-03",
+          "endDate": "2026-07-03",
+          "time": "",
+          "location": "Sydney Airport",
+          "notes": "Mick departs Australia.",
+          "category": "flight"
+        },
+        {
+          "id": "liz-kids-to-moss-vale",
+          "title": "Liz + kids drive to Moss Vale",
+          "startDate": "2026-07-03",
+          "endDate": "2026-07-03",
+          "time": "",
+          "location": "Sydney CBD -> Moss Vale",
+          "notes": "Liz and kids drive back after Mick flies out.",
+          "category": "travel"
+        },
+        {
+          "id": "moss-vale-stay-2",
+          "title": "Moss Vale stay",
+          "startDate": "2026-07-03",
+          "endDate": "2026-07-07",
+          "time": "",
+          "location": "Moss Vale",
+          "notes": "Liz + kids sleep location.",
+          "category": "accommodation"
+        },
+        {
+          "id": "airport-hotel-drive",
+          "title": "Drive to Sydney Airport hotel",
+          "startDate": "2026-07-08",
+          "endDate": "2026-07-08",
+          "time": "",
+          "location": "Moss Vale -> Sydney Airport",
+          "notes": "Liz + kids drive to Sydney Airport and stay at airport hotel.",
+          "category": "travel"
+        },
+        {
+          "id": "airport-hotel",
+          "title": "Sydney Airport hotel",
+          "startDate": "2026-07-08",
+          "endDate": "2026-07-08",
+          "time": "",
+          "location": "Sydney Airport",
+          "notes": "Airport hotel before departure.",
+          "category": "accommodation"
+        },
+        {
+          "id": "trip-ends",
+          "title": "Trip ends / return TBD",
+          "startDate": "2026-07-09",
+          "endDate": "2026-07-09",
+          "time": "",
+          "location": "TBD",
+          "notes": "Departure / return details still to be added.",
+          "category": "open"
+        },
+        {
+          "id": "1c91854b-85d4-4653-a3d5-bb21af1a77ce",
+          "title": "Asplundh Office Visit",
+          "startDate": "2026-06-18",
+          "endDate": "2026-06-18",
+          "time": "",
+          "location": "",
+          "notes": "",
+          "category": "appointment"
+        }
       ]
     }
   ]
