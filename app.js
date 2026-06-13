@@ -263,7 +263,36 @@ function getVisibleEvents(dateKey) {
   return trip.events
     .filter((event) => eventTouchesDate(event, dateKey))
     .filter((event) => activeFilter === "all" || event.category === activeFilter)
-    .sort((a, b) => a.startDate.localeCompare(b.startDate) || (a.time || "").localeCompare(b.time || ""));
+    .sort(compareEventsForDay);
+}
+
+function compareEventsForDay(a, b) {
+  return getTimeSortValue(a.time) - getTimeSortValue(b.time)
+    || a.startDate.localeCompare(b.startDate)
+    || a.title.localeCompare(b.title);
+}
+
+function getTimeSortValue(value) {
+  const time = String(value || "").trim().toLowerCase();
+  if (!time) return Number.POSITIVE_INFINITY;
+
+  const match = time.match(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/);
+  if (match) {
+    let hours = Number(match[1]);
+    const minutes = Number(match[2] || 0);
+    const period = match[3];
+
+    if (period === "pm" && hours < 12) hours += 12;
+    if (period === "am" && hours === 12) hours = 0;
+    return hours * 60 + minutes;
+  }
+
+  if (time.includes("morning")) return 9 * 60;
+  if (time.includes("lunch") || time.includes("midday") || time.includes("noon")) return 12 * 60;
+  if (time.includes("afternoon")) return 14 * 60;
+  if (time.includes("evening")) return 18 * 60;
+  if (time.includes("night")) return 20 * 60;
+  return Number.POSITIVE_INFINITY - 1;
 }
 
 function assignMultiDayLanes(events) {
