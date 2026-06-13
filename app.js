@@ -854,6 +854,7 @@ async function saveRemoteState() {
       }),
     });
 
+    if (response.status === 404) throw new Error("Table not found. Run the Supabase SQL setup first.");
     if (!response.ok) throw new Error(`Supabase returned ${response.status}`);
     setCloudStatus(`Saved ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}.`);
   } catch (error) {
