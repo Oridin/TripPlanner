@@ -2,10 +2,11 @@ const STORAGE_KEY = "trip-planner-v4";
 const LEGACY_STORAGE_KEY = "sydney-visa-trip-planner-v2";
 const SUPABASE_URL = "https://uywknhhqlbwydpayqntz.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5d2tuaGhxbGJ3eWRwYXlxbnR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4NjU5NTAsImV4cCI6MjA4NTQ0MTk1MH0.tdWX0o4yNo1uFpe9a2db78k7AbUG8k9o252_OHhU6s0";
-const SUPABASE_SESSION_KEY = "trip-planner-supabase-session";
+const LOCAL_UNLOCK_KEY = "trip-planner-unlocked";
 const SHARED_PLAN_ID = "shared";
-const USERNAME_EMAILS = {
-  fulton: "fulton@tripplanner.local",
+const APP_LOGIN = {
+  username: "fulton",
+  password: "visa2026",
 };
 
 const defaultCategories = {
@@ -736,51 +737,30 @@ function setLoginStatus(message) {
   loginStatus.textContent = message;
 }
 
-function getSession() {
-  const saved = localStorage.getItem(SUPABASE_SESSION_KEY);
-  if (!saved) return null;
-
-  try {
-    const session = JSON.parse(saved);
-    if (!session.access_token || Date.now() > session.expires_at * 1000) {
-      localStorage.removeItem(SUPABASE_SESSION_KEY);
-      return null;
-    }
-    return session;
-  } catch {
-    localStorage.removeItem(SUPABASE_SESSION_KEY);
-    return null;
-  }
+function isUnlocked() {
+  return localStorage.getItem(LOCAL_UNLOCK_KEY) === "true";
 }
 
-function setSession(session) {
-  localStorage.setItem(SUPABASE_SESSION_KEY, JSON.stringify(session));
+function setUnlocked() {
+  localStorage.setItem(LOCAL_UNLOCK_KEY, "true");
   document.body.classList.add("is-authenticated");
 }
 
-function clearSession() {
-  localStorage.removeItem(SUPABASE_SESSION_KEY);
+function clearUnlocked() {
+  localStorage.removeItem(LOCAL_UNLOCK_KEY);
   document.body.classList.remove("is-authenticated");
 }
 
-async function signIn(username, password) {
-  const email = USERNAME_EMAILS[username.trim().toLowerCase()];
-  if (!email) throw new Error("Unknown username");
+function unlockPlanner(username, password) {
+  if (username.trim().toLowerCase() !== APP_LOGIN.username || password !== APP_LOGIN.password) {
+    throw new Error("Wrong username or password.");
+  }
 
-  const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-    method: "POST",
-    headers: supabaseHeaders(),
-    body: JSON.stringify({ email, password }),
-  });
-
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(payload.error_description || payload.msg || "Login failed");
-  setSession(payload);
+  setUnlocked();
 }
 
 async function bootAuthenticatedApp() {
-  const session = getSession();
-  if (!session) {
+  if (!isUnlocked()) {
     setLoginStatus("Log in to load the shared plan.");
     return;
   }
@@ -818,7 +798,7 @@ async function loadRemoteState() {
 }
 
 function scheduleRemoteSave() {
-  if (!getSession()) {
+  if (!isUnlocked()) {
     setCloudStatus("Saved locally. Log in to sync across devices.");
     return;
   }
@@ -829,7 +809,7 @@ function scheduleRemoteSave() {
 }
 
 async function saveRemoteState() {
-  if (!getSession()) return;
+  if (!isUnlocked()) return;
 
   try {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/trip_planner_state`, {
@@ -852,19 +832,12 @@ async function saveRemoteState() {
   }
 }
 
-function supabaseHeaders(authenticated = false) {
-  const headers = {
+function supabaseHeaders() {
+  return {
     apikey: SUPABASE_ANON_KEY,
     Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
     "Content-Type": "application/json",
   };
-
-  if (authenticated) {
-    const session = getSession();
-    if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
-  }
-
-  return headers;
 }
 
 eventForm.addEventListener("submit", (event) => {
@@ -887,15 +860,15 @@ document.querySelector("#newTripBtn").addEventListener("click", createTrip);
 document.querySelector("#addEventBtn").addEventListener("click", () => openDialog());
 document.querySelector("#addCategoryBtn").addEventListener("click", createCategory);
 signOutBtn.addEventListener("click", () => {
-  clearSession();
+  clearUnlocked();
   setLoginStatus("Signed out.");
 });
 
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  setLoginStatus("Logging in...");
+  setLoginStatus("Opening planner...");
   try {
-    await signIn(loginUsername.value, loginPassword.value);
+    unlockPlanner(loginUsername.value, loginPassword.value);
     loginPassword.value = "";
     setLoginStatus("");
     await loadRemoteState();

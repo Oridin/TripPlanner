@@ -9,22 +9,25 @@ alter table public.trip_planner_state enable row level security;
 drop policy if exists "Trip planner authenticated read" on public.trip_planner_state;
 drop policy if exists "Trip planner authenticated insert" on public.trip_planner_state;
 drop policy if exists "Trip planner authenticated update" on public.trip_planner_state;
+drop policy if exists "Trip planner public read" on public.trip_planner_state;
+drop policy if exists "Trip planner public insert" on public.trip_planner_state;
+drop policy if exists "Trip planner public update" on public.trip_planner_state;
 
-create policy "Trip planner authenticated read"
+create policy "Trip planner public read"
 on public.trip_planner_state
 for select
-to authenticated
+to anon
 using (true);
 
-create policy "Trip planner authenticated insert"
+create policy "Trip planner public insert"
 on public.trip_planner_state
 for insert
-to authenticated
-with check (true);
+to anon
+with check (id = 'shared');
 
-create policy "Trip planner authenticated update"
+create policy "Trip planner public update"
 on public.trip_planner_state
 for update
-to authenticated
-using (true)
-with check (true);
+to anon
+using (id = 'shared')
+with check (id = 'shared');
