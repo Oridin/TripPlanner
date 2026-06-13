@@ -4,9 +4,26 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Trip Planner</title>
-    <link rel="stylesheet" href="styles.css?v=20260610-6">
+    <link rel="stylesheet" href="styles.css?v=20260613-1">
   </head>
   <body>
+    <section id="loginScreen" class="login-screen" aria-label="Trip planner login">
+      <form id="loginForm" class="login-panel">
+        <p class="eyebrow">Family planner</p>
+        <h1>Trip Planner</h1>
+        <label>
+          Username
+          <input id="loginUsername" type="text" autocomplete="username" required>
+        </label>
+        <label>
+          Password
+          <input id="loginPassword" type="password" autocomplete="current-password" required>
+        </label>
+        <button class="primary-button" type="submit">Log in</button>
+        <p id="loginStatus" class="cloud-status" aria-live="polite"></p>
+      </form>
+    </section>
+
     <main class="app-shell">
       <section class="planner-frame" aria-label="Sydney visa trip calendar planner">
         <aside class="vertical-title">
@@ -22,7 +39,7 @@
             <div class="topbar-actions">
               <button id="newTripBtn" class="ghost-button" type="button">New trip</button>
               <button id="addEventBtn" class="primary-button" type="button">Add item</button>
-              <button id="cloudSyncBtn" class="ghost-button" type="button">Cloud sync</button>
+              <button id="signOutBtn" class="ghost-button" type="button">Sign out</button>
               <button id="exportBtn" class="ghost-button" type="button">Export</button>
               <label class="ghost-button file-button">
                 Import
@@ -127,6 +144,6 @@
       </form>
     </dialog>
 
-    <script src="app.js?v=20260610-6"></script>
+    <script src="app.js?v=20260613-1"></script>
   </body>
 </html>

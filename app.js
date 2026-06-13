@@ -1,12 +1,11 @@
 const STORAGE_KEY = "trip-planner-v4";
 const LEGACY_STORAGE_KEY = "sydney-visa-trip-planner-v2";
-const CLOUD_TOKEN_KEY = "trip-planner-github-token";
-const CLOUD_DATA_PATH = "data/trip-planner.json";
-const CLOUD_REPO = {
-  owner: "Oridin",
-  repo: "TripPlanner",
-  liveBranch: "gh-pages",
-  backupBranch: "main",
+const SUPABASE_URL = "https://uywknhhqlbwydpayqntz.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5d2tuaGhxbGJ3eWRwYXlxbnR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4NjU5NTAsImV4cCI6MjA4NTQ0MTk1MH0.tdWX0o4yNo1uFpe9a2db78k7AbUG8k9o252_OHhU6s0";
+const SUPABASE_SESSION_KEY = "trip-planner-supabase-session";
+const SHARED_PLAN_ID = "shared";
+const USERNAME_EMAILS = {
+  fulton: "fulton@tripplanner.local",
 };
 
 const defaultCategories = {
@@ -65,8 +64,8 @@ let state = loadState();
 let activeFilter = "all";
 let pointerDrag = null;
 let resizeDrag = null;
-let cloudSaveTimer = null;
-let isLoadingCloud = false;
+let syncSaveTimer = null;
+let isLoadingRemote = false;
 
 const calendarGrid = document.querySelector("#calendarGrid");
 const categoryStrip = document.querySelector("#categoryStrip");
@@ -87,8 +86,13 @@ const eventNotes = document.querySelector("#eventNotes");
 const eventCategory = document.querySelector("#eventCategory");
 const dialogTitle = document.querySelector("#dialogTitle");
 const deleteEventBtn = document.querySelector("#deleteEventBtn");
-const cloudSyncBtn = document.querySelector("#cloudSyncBtn");
+const signOutBtn = document.querySelector("#signOutBtn");
 const cloudStatus = document.querySelector("#cloudStatus");
+const loginScreen = document.querySelector("#loginScreen");
+const loginForm = document.querySelector("#loginForm");
+const loginUsername = document.querySelector("#loginUsername");
+const loginPassword = document.querySelector("#loginPassword");
+const loginStatus = document.querySelector("#loginStatus");
 
 function loadState() {
   const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
@@ -158,7 +162,7 @@ function normalizeEvent(event) {
 
 function saveState({ sync = true } = {}) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  if (sync && !isLoadingCloud) scheduleCloudSave();
+  if (sync && !isLoadingRemote) scheduleRemoteSave();
 }
 
 function currentTrip() {
@@ -724,123 +728,143 @@ function slugify(value) {
     .replace(/^-|-$/g, "") || crypto.randomUUID();
 }
 
-async function loadCloudState() {
-  isLoadingCloud = true;
-  try {
-    const response = await fetch(`${CLOUD_DATA_PATH}?v=${Date.now()}`, { cache: "no-store" });
-    if (!response.ok) {
-      setCloudStatus("Shared plan not found yet. Local edits will save on this device.");
-      return;
-    }
-
-    state = normalizeState(await response.json());
-    saveState({ sync: false });
-    render();
-    setCloudStatus(hasCloudToken() ? "Shared plan loaded. Cloud sync is on." : "Shared plan loaded. Add a token to publish edits.");
-  } catch {
-    setCloudStatus("Could not load shared plan. Using local copy.");
-  } finally {
-    isLoadingCloud = false;
-  }
-}
-
-function hasCloudToken() {
-  return Boolean(localStorage.getItem(CLOUD_TOKEN_KEY));
-}
-
 function setCloudStatus(message) {
   cloudStatus.textContent = message;
 }
 
-function setupCloudSync() {
-  const existing = localStorage.getItem(CLOUD_TOKEN_KEY);
-  const message = existing
-    ? "Cloud sync is on. Paste a new GitHub token to replace it, or leave blank to keep the current token."
-    : "Paste a GitHub fine-grained token with Contents read/write access to Oridin/TripPlanner.";
-  const token = prompt(message);
-
-  if (token === null) return;
-  if (token.trim()) localStorage.setItem(CLOUD_TOKEN_KEY, token.trim());
-  if (!hasCloudToken()) {
-    setCloudStatus("Cloud sync needs a GitHub token before it can publish edits.");
-    return;
-  }
-
-  publishCloudState();
+function setLoginStatus(message) {
+  loginStatus.textContent = message;
 }
 
-function scheduleCloudSave() {
-  if (!hasCloudToken()) {
-    setCloudStatus("Saved locally. Add a GitHub token to sync across devices.");
-    return;
-  }
-
-  clearTimeout(cloudSaveTimer);
-  setCloudStatus("Saving to cloud...");
-  cloudSaveTimer = setTimeout(() => publishCloudState(), 900);
-}
-
-async function publishCloudState() {
-  if (!hasCloudToken()) return;
+function getSession() {
+  const saved = localStorage.getItem(SUPABASE_SESSION_KEY);
+  if (!saved) return null;
 
   try {
-    await uploadCloudBranch(CLOUD_REPO.liveBranch);
-    await uploadCloudBranch(CLOUD_REPO.backupBranch).catch(() => {});
-    setCloudStatus(`Cloud synced ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}.`);
+    const session = JSON.parse(saved);
+    if (!session.access_token || Date.now() > session.expires_at * 1000) {
+      localStorage.removeItem(SUPABASE_SESSION_KEY);
+      return null;
+    }
+    return session;
+  } catch {
+    localStorage.removeItem(SUPABASE_SESSION_KEY);
+    return null;
+  }
+}
+
+function setSession(session) {
+  localStorage.setItem(SUPABASE_SESSION_KEY, JSON.stringify(session));
+  document.body.classList.add("is-authenticated");
+}
+
+function clearSession() {
+  localStorage.removeItem(SUPABASE_SESSION_KEY);
+  document.body.classList.remove("is-authenticated");
+}
+
+async function signIn(username, password) {
+  const email = USERNAME_EMAILS[username.trim().toLowerCase()];
+  if (!email) throw new Error("Unknown username");
+
+  const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+    method: "POST",
+    headers: supabaseHeaders(),
+    body: JSON.stringify({ email, password }),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload.error_description || payload.msg || "Login failed");
+  setSession(payload);
+}
+
+async function bootAuthenticatedApp() {
+  const session = getSession();
+  if (!session) {
+    setLoginStatus("Log in to load the shared plan.");
+    return;
+  }
+
+  document.body.classList.add("is-authenticated");
+  await loadRemoteState();
+}
+
+async function loadRemoteState() {
+  isLoadingRemote = true;
+  setCloudStatus("Loading shared plan...");
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/trip_planner_state?id=eq.${SHARED_PLAN_ID}&select=data`, {
+      headers: supabaseHeaders(true),
+    });
+
+    if (response.status === 404) throw new Error("Table not found. Run the Supabase SQL setup first.");
+    if (!response.ok) throw new Error(`Supabase returned ${response.status}`);
+
+    const rows = await response.json();
+    if (rows[0]?.data) {
+      state = normalizeState(rows[0].data);
+      saveState({ sync: false });
+      render();
+      setCloudStatus("Shared plan loaded.");
+    } else {
+      await saveRemoteState();
+      setCloudStatus("Shared plan created.");
+    }
   } catch (error) {
-    setCloudStatus(`Cloud sync failed: ${error.message}`);
+    setCloudStatus(`Could not load shared plan: ${error.message}`);
+  } finally {
+    isLoadingRemote = false;
   }
 }
 
-async function uploadCloudBranch(branch) {
-  const token = localStorage.getItem(CLOUD_TOKEN_KEY);
-  const url = `https://api.github.com/repos/${CLOUD_REPO.owner}/${CLOUD_REPO.repo}/contents/${CLOUD_DATA_PATH}`;
-  const current = await fetch(`${url}?ref=${encodeURIComponent(branch)}`, {
-    headers: githubHeaders(token),
-  });
-
-  let sha = null;
-  if (current.ok) {
-    sha = (await current.json()).sha;
-  } else if (current.status !== 404) {
-    throw new Error(`GitHub returned ${current.status}`);
+function scheduleRemoteSave() {
+  if (!getSession()) {
+    setCloudStatus("Saved locally. Log in to sync across devices.");
+    return;
   }
 
-  const body = {
-    branch,
-    message: "Update shared trip planner data",
-    content: toBase64(JSON.stringify(state, null, 2)),
-  };
-  if (sha) body.sha = sha;
+  clearTimeout(syncSaveTimer);
+  setCloudStatus("Saving...");
+  syncSaveTimer = setTimeout(() => saveRemoteState(), 700);
+}
 
-  const response = await fetch(url, {
-    method: "PUT",
-    headers: githubHeaders(token),
-    body: JSON.stringify(body),
-  });
+async function saveRemoteState() {
+  if (!getSession()) return;
 
-  if (!response.ok) {
-    const details = await response.json().catch(() => ({}));
-    throw new Error(details.message || `GitHub returned ${response.status}`);
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/trip_planner_state`, {
+      method: "POST",
+      headers: {
+        ...supabaseHeaders(true),
+        Prefer: "resolution=merge-duplicates",
+      },
+      body: JSON.stringify({
+        id: SHARED_PLAN_ID,
+        data: state,
+        updated_at: new Date().toISOString(),
+      }),
+    });
+
+    if (!response.ok) throw new Error(`Supabase returned ${response.status}`);
+    setCloudStatus(`Saved ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}.`);
+  } catch (error) {
+    setCloudStatus(`Save failed: ${error.message}`);
   }
 }
 
-function githubHeaders(token) {
-  return {
-    Accept: "application/vnd.github+json",
-    Authorization: `Bearer ${token}`,
+function supabaseHeaders(authenticated = false) {
+  const headers = {
+    apikey: SUPABASE_ANON_KEY,
+    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
     "Content-Type": "application/json",
-    "X-GitHub-Api-Version": "2022-11-28",
   };
-}
 
-function toBase64(value) {
-  const bytes = new TextEncoder().encode(value);
-  let binary = "";
-  bytes.forEach((byte) => {
-    binary += String.fromCharCode(byte);
-  });
-  return btoa(binary);
+  if (authenticated) {
+    const session = getSession();
+    if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
+  }
+
+  return headers;
 }
 
 eventForm.addEventListener("submit", (event) => {
@@ -862,7 +886,23 @@ deleteEventBtn.addEventListener("click", () => {
 document.querySelector("#newTripBtn").addEventListener("click", createTrip);
 document.querySelector("#addEventBtn").addEventListener("click", () => openDialog());
 document.querySelector("#addCategoryBtn").addEventListener("click", createCategory);
-cloudSyncBtn.addEventListener("click", setupCloudSync);
+signOutBtn.addEventListener("click", () => {
+  clearSession();
+  setLoginStatus("Signed out.");
+});
+
+loginForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  setLoginStatus("Logging in...");
+  try {
+    await signIn(loginUsername.value, loginPassword.value);
+    loginPassword.value = "";
+    setLoginStatus("");
+    await loadRemoteState();
+  } catch (error) {
+    setLoginStatus(error.message);
+  }
+});
 
 tripSelect.addEventListener("change", (event) => {
   state.activeTripId = event.target.value;
@@ -910,4 +950,4 @@ document.querySelector("#importInput").addEventListener("change", async (event) 
 });
 
 render();
-loadCloudState();
+bootAuthenticatedApp();
