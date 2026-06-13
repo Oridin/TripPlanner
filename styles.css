@@ -509,13 +509,16 @@ textarea {
 
 @media (max-width: 900px) {
   .app-shell {
-    padding: 14px;
+    padding: 6px;
+    place-items: start stretch;
   }
 
   .planner-frame {
-    min-height: calc(100vh - 28px);
+    width: 100%;
+    min-height: calc(100vh - 12px);
     grid-template-columns: 1fr;
-    padding: 16px;
+    padding: 10px;
+    box-shadow: none;
   }
 
   .vertical-title {
@@ -525,22 +528,51 @@ textarea {
   .vertical-title span {
     writing-mode: horizontal-tb;
     rotate: none;
-    font-size: 2.1rem;
+    font-size: 1.9rem;
+  }
+
+  .planner-main {
+    gap: 10px;
   }
 
   .topbar,
   .topbar-actions {
     align-items: stretch;
     flex-direction: column;
+    gap: 8px;
+  }
+
+  .topbar-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .topbar-actions > * {
+    width: 100%;
+  }
+
+  h1 {
+    font-size: 2rem;
   }
 
   .controls {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .category-strip {
     align-items: stretch;
     flex-direction: column;
+    gap: 8px;
+  }
+
+  .category-list {
+    gap: 6px;
+  }
+
+  .category-pill {
+    padding: 5px 8px;
+    font-size: 0.76rem;
   }
 
   .calendar-wrap {
@@ -549,13 +581,143 @@ textarea {
 
   .weekday-row,
   .calendar-grid {
-    min-width: 820px;
+    grid-template-columns: repeat(7, minmax(88px, 1fr));
+    min-width: 616px;
+  }
+
+  .weekday-row span {
+    min-height: 44px;
+    font-size: 0.86rem;
+  }
+
+  .day-cell {
+    min-height: 112px;
+    padding: 26px 4px 5px;
+  }
+
+  .day-number {
+    top: 6px;
+    left: 7px;
+    font-size: 0.86rem;
+  }
+
+  .add-day-button {
+    top: 4px;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+  }
+
+  .event-stack {
+    gap: 4px;
+  }
+
+  .lane-spacer {
+    min-height: 23px;
+  }
+
+  .event-card {
+    border-left-width: 4px;
+    border-radius: 5px;
+    padding: 5px 6px;
+  }
+
+  .event-card.multi-day {
+    width: calc(100% + 8px);
+    margin-left: -4px;
+    margin-right: -4px;
+    min-height: 23px;
+    padding-block: 4px;
+  }
+
+  .event-card.span-start {
+    border-left-width: 4px;
+  }
+
+  .event-title {
+    font-size: 0.75rem;
+  }
+
+  .event-meta {
+    font-size: 0.64rem;
   }
 }
 
 @media (max-width: 560px) {
+  .login-screen {
+    padding: 10px;
+  }
+
+  .login-panel {
+    padding: 18px;
+  }
+
+  .app-shell {
+    padding: 0;
+  }
+
+  .planner-frame {
+    min-height: 100vh;
+    padding: 8px;
+  }
+
+  .eyebrow {
+    font-size: 0.68rem;
+  }
+
+  h1 {
+    font-size: 1.65rem;
+  }
+
+  .vertical-title span {
+    font-size: 1.45rem;
+  }
+
+  .controls {
+    grid-template-columns: 1fr;
+  }
+
+  input,
+  select,
+  textarea,
+  .primary-button,
+  .ghost-button,
+  .plain-button,
+  .danger-button,
+  .icon-button {
+    padding: 9px 10px;
+  }
+
+  .topbar-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .category-list {
+    max-height: 76px;
+    overflow-y: auto;
+  }
+
+  .weekday-row,
+  .calendar-grid {
+    grid-template-columns: repeat(7, minmax(78px, 1fr));
+    min-width: 546px;
+  }
+
+  .weekday-row span {
+    min-height: 38px;
+    font-size: 0.75rem;
+  }
+
+  .day-cell {
+    min-height: 104px;
+  }
+
   .form-grid,
   .dialog-actions {
     grid-template-columns: 1fr;
+  }
+
+  .event-dialog form {
+    padding: 14px;
   }
 }
