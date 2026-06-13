@@ -4,6 +4,7 @@ const SUPABASE_URL = "https://uywknhhqlbwydpayqntz.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5d2tuaGhxbGJ3eWRwYXlxbnR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4NjU5NTAsImV4cCI6MjA4NTQ0MTk1MH0.tdWX0o4yNo1uFpe9a2db78k7AbUG8k9o252_OHhU6s0";
 const LOCAL_UNLOCK_KEY = "trip-planner-unlocked";
 const SHARED_PLAN_ID = "shared";
+const MAX_UNDO_STATES = 30;
 const APP_LOGIN = {
   username: "fulton",
   password: "visa2026",
@@ -67,6 +68,8 @@ let pointerDrag = null;
 let resizeDrag = null;
 let syncSaveTimer = null;
 let isLoadingRemote = false;
+let undoStack = [];
+let lastStateSnapshot = JSON.stringify(state);
 
 const calendarGrid = document.querySelector("#calendarGrid");
 const categoryStrip = document.querySelector("#categoryStrip");
@@ -87,6 +90,8 @@ const eventNotes = document.querySelector("#eventNotes");
 const eventCategory = document.querySelector("#eventCategory");
 const dialogTitle = document.querySelector("#dialogTitle");
 const deleteEventBtn = document.querySelector("#deleteEventBtn");
+const saveBtn = document.querySelector("#saveBtn");
+const undoBtn = document.querySelector("#undoBtn");
 const signOutBtn = document.querySelector("#signOutBtn");
 const cloudStatus = document.querySelector("#cloudStatus");
 const loginScreen = document.querySelector("#loginScreen");
@@ -161,9 +166,32 @@ function normalizeEvent(event) {
   };
 }
 
-function saveState({ sync = true } = {}) {
+function saveState({ sync = true, recordUndo = true } = {}) {
+  const nextSnapshot = JSON.stringify(state);
+  if (recordUndo && nextSnapshot !== lastStateSnapshot) {
+    undoStack.push(lastStateSnapshot);
+    if (undoStack.length > MAX_UNDO_STATES) undoStack.shift();
+  }
+
+  lastStateSnapshot = nextSnapshot;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  updateUndoButton();
   if (sync && !isLoadingRemote) scheduleRemoteSave();
+}
+
+function updateUndoButton() {
+  undoBtn.disabled = undoStack.length === 0;
+}
+
+function undoLastChange() {
+  const previousSnapshot = undoStack.pop();
+  if (!previousSnapshot) return;
+
+  state = normalizeState(JSON.parse(previousSnapshot));
+  activeFilter = "all";
+  saveState({ recordUndo: false });
+  render();
+  setCloudStatus("Undid last change.");
 }
 
 function currentTrip() {
@@ -783,7 +811,8 @@ async function loadRemoteState() {
     const rows = await response.json();
     if (rows[0]?.data) {
       state = normalizeState(rows[0].data);
-      saveState({ sync: false });
+      undoStack = [];
+      saveState({ sync: false, recordUndo: false });
       render();
       setCloudStatus("Shared plan loaded.");
     } else {
@@ -859,6 +888,18 @@ deleteEventBtn.addEventListener("click", () => {
 document.querySelector("#newTripBtn").addEventListener("click", createTrip);
 document.querySelector("#addEventBtn").addEventListener("click", () => openDialog());
 document.querySelector("#addCategoryBtn").addEventListener("click", createCategory);
+saveBtn.addEventListener("click", async () => {
+  clearTimeout(syncSaveTimer);
+  saveState({ sync: false, recordUndo: false });
+  if (!isUnlocked()) {
+    setCloudStatus("Saved locally. Log in to sync across devices.");
+    return;
+  }
+
+  setCloudStatus("Saving...");
+  await saveRemoteState();
+});
+undoBtn.addEventListener("click", undoLastChange);
 signOutBtn.addEventListener("click", () => {
   clearUnlocked();
   setLoginStatus("Signed out.");
@@ -901,26 +942,6 @@ endDateInput.addEventListener("change", (event) => {
   render();
 });
 
-document.querySelector("#exportBtn").addEventListener("click", () => {
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "trip-planner.json";
-  link.click();
-  URL.revokeObjectURL(url);
-});
-
-document.querySelector("#importInput").addEventListener("change", async (event) => {
-  const [file] = event.target.files;
-  if (!file) return;
-  const text = await file.text();
-  state = normalizeState(JSON.parse(text));
-  activeFilter = "all";
-  saveState();
-  render();
-  event.target.value = "";
-});
-
+updateUndoButton();
 render();
 bootAuthenticatedApp();

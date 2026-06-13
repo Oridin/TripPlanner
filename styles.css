@@ -179,6 +179,11 @@ textarea {
   color: #fff;
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .plain-button {
   border-color: #c7c1cc;
 }

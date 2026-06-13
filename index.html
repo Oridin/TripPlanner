@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Trip Planner</title>
-    <link rel="stylesheet" href="styles.css?v=20260613-3">
+    <link rel="stylesheet" href="styles.css?v=20260613-4">
   </head>
   <body>
     <section id="loginScreen" class="login-screen" aria-label="Trip planner login">
@@ -39,12 +39,9 @@
             <div class="topbar-actions">
               <button id="newTripBtn" class="ghost-button" type="button">New trip</button>
               <button id="addEventBtn" class="primary-button" type="button">Add item</button>
+              <button id="saveBtn" class="ghost-button" type="button">Save</button>
+              <button id="undoBtn" class="ghost-button" type="button">Undo</button>
               <button id="signOutBtn" class="ghost-button" type="button">Sign out</button>
-              <button id="exportBtn" class="ghost-button" type="button">Export</button>
-              <label class="ghost-button file-button">
-                Import
-                <input id="importInput" type="file" accept="application/json">
-              </label>
             </div>
           </header>
 
@@ -144,6 +141,6 @@
       </form>
     </dialog>
 
-    <script src="app.js?v=20260613-2"></script>
+    <script src="app.js?v=20260613-4"></script>
   </body>
 </html>
