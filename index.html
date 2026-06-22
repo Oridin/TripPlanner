@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Trip Planner</title>
-    <link rel="stylesheet" href="styles.css?v=20260622-3">
+    <link rel="stylesheet" href="styles.css?v=20260622-4">
   </head>
   <body>
     <section id="loginScreen" class="login-screen" aria-label="Trip planner login">
@@ -162,7 +162,8 @@
           </label>
           <label>
             Time
-            <input id="eventTime" type="text" maxlength="24" placeholder="10:30 AM">
+            <input id="eventTime" type="text" maxlength="24" placeholder="10:30 AM" list="timeOptions" autocomplete="off">
+            <datalist id="timeOptions"></datalist>
           </label>
         </div>
         <div class="form-grid single-field">
@@ -185,6 +186,6 @@
       </form>
     </dialog>
 
-    <script src="app.js?v=20260622-3"></script>
+    <script src="app.js?v=20260622-4"></script>
   </body>
 </html>

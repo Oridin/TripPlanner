@@ -398,6 +398,23 @@ function toggleMenu() {
   else openMenu();
 }
 
+function populateTimeOptions() {
+  const datalist = document.querySelector("#timeOptions");
+  if (!datalist) return;
+  const qualitative = ["All day", "Morning", "Afternoon", "Evening", "Night", "After appointment"];
+  const clock = [];
+  for (let minutes = 0; minutes < 24 * 60; minutes += 30) {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    const period = hours < 12 ? "AM" : "PM";
+    const hour12 = hours % 12 === 0 ? 12 : hours % 12;
+    clock.push(`${hour12}:${String(mins).padStart(2, "0")} ${period}`);
+  }
+  datalist.innerHTML = [...qualitative, ...clock]
+    .map((value) => `<option value="${value}"></option>`)
+    .join("");
+}
+
 function renderTrips() {
   tripSelect.innerHTML = "";
   state.trips.forEach((trip) => {
@@ -1152,6 +1169,7 @@ endDateInput.addEventListener("change", (event) => {
   render();
 });
 
+populateTimeOptions();
 updateUndoButton();
 render();
 bootAuthenticatedApp();
