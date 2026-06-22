@@ -85,6 +85,8 @@ const menuBackdrop = document.querySelector("#menuBackdrop");
 const tripMenu = document.querySelector("#tripMenu");
 const tripNameInput = document.querySelector("#tripName");
 const tripTaglineInput = document.querySelector("#tripTagline");
+const tripTitleEl = document.querySelector("#tripTitle");
+const tripEyebrowEl = document.querySelector("#tripEyebrow");
 const categoryStrip = document.querySelector("#categoryStrip");
 const categoryFilter = document.querySelector("#categoryFilter");
 const tripSelect = document.querySelector("#tripSelect");
@@ -331,8 +333,8 @@ function assignMultiDayLanes(events) {
 
 function render() {
   const trip = currentTrip();
-  document.querySelector("h1").textContent = trip.name;
-  document.querySelector(".eyebrow").textContent = trip.tagline || "Trip planner";
+  tripTitleEl.textContent = trip.name;
+  tripEyebrowEl.textContent = trip.tagline || "Trip planner";
   tripSelect.value = trip.id;
   if (document.activeElement !== tripNameInput) tripNameInput.value = trip.name;
   if (document.activeElement !== tripTaglineInput) tripTaglineInput.value = trip.tagline || "";
@@ -1144,7 +1146,7 @@ document.addEventListener("keydown", (event) => {
 
 tripNameInput.addEventListener("input", (event) => {
   currentTrip().name = event.target.value.trim() || "Untitled Trip";
-  document.querySelector("h1").textContent = currentTrip().name;
+  tripTitleEl.textContent = currentTrip().name;
 });
 tripNameInput.addEventListener("change", () => {
   renderTrips();
@@ -1153,7 +1155,7 @@ tripNameInput.addEventListener("change", () => {
 
 tripTaglineInput.addEventListener("input", (event) => {
   currentTrip().tagline = event.target.value;
-  document.querySelector(".eyebrow").textContent = event.target.value || "Trip planner";
+  tripEyebrowEl.textContent = event.target.value || "Trip planner";
 });
 tripTaglineInput.addEventListener("change", () => saveState());
 
