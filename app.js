@@ -79,6 +79,12 @@ const calendarWrap = document.querySelector(".calendar-wrap");
 const gridViewBtn = document.querySelector("#gridViewBtn");
 const agendaViewBtn = document.querySelector("#agendaViewBtn");
 const todayBtn = document.querySelector("#todayBtn");
+const menuBtn = document.querySelector("#menuBtn");
+const menuCloseBtn = document.querySelector("#menuCloseBtn");
+const menuBackdrop = document.querySelector("#menuBackdrop");
+const tripMenu = document.querySelector("#tripMenu");
+const tripNameInput = document.querySelector("#tripName");
+const tripTaglineInput = document.querySelector("#tripTagline");
 const categoryStrip = document.querySelector("#categoryStrip");
 const categoryFilter = document.querySelector("#categoryFilter");
 const tripSelect = document.querySelector("#tripSelect");
@@ -328,6 +334,8 @@ function render() {
   document.querySelector("h1").textContent = trip.name;
   document.querySelector(".eyebrow").textContent = trip.tagline || "Trip planner";
   tripSelect.value = trip.id;
+  if (document.activeElement !== tripNameInput) tripNameInput.value = trip.name;
+  if (document.activeElement !== tripTaglineInput) tripTaglineInput.value = trip.tagline || "";
   startDateInput.value = trip.startDate;
   endDateInput.value = trip.endDate;
   formatRangeTitle();
@@ -369,6 +377,25 @@ function scrollToToday() {
       ?.querySelector(".is-today");
     target?.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
   });
+}
+
+function openMenu() {
+  document.body.classList.add("menu-open");
+  menuBtn.setAttribute("aria-expanded", "true");
+  tripMenu.setAttribute("aria-hidden", "false");
+  menuBackdrop.hidden = false;
+}
+
+function closeMenu() {
+  document.body.classList.remove("menu-open");
+  menuBtn.setAttribute("aria-expanded", "false");
+  tripMenu.setAttribute("aria-hidden", "true");
+  menuBackdrop.hidden = true;
+}
+
+function toggleMenu() {
+  if (document.body.classList.contains("menu-open")) closeMenu();
+  else openMenu();
 }
 
 function renderTrips() {
@@ -1090,6 +1117,28 @@ categoryFilter.addEventListener("change", (event) => {
 gridViewBtn.addEventListener("click", () => setViewMode("grid"));
 agendaViewBtn.addEventListener("click", () => setViewMode("agenda"));
 todayBtn.addEventListener("click", scrollToToday);
+
+menuBtn.addEventListener("click", toggleMenu);
+menuCloseBtn.addEventListener("click", closeMenu);
+menuBackdrop.addEventListener("click", closeMenu);
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && document.body.classList.contains("menu-open")) closeMenu();
+});
+
+tripNameInput.addEventListener("input", (event) => {
+  currentTrip().name = event.target.value.trim() || "Untitled Trip";
+  document.querySelector("h1").textContent = currentTrip().name;
+});
+tripNameInput.addEventListener("change", () => {
+  renderTrips();
+  saveState();
+});
+
+tripTaglineInput.addEventListener("input", (event) => {
+  currentTrip().tagline = event.target.value;
+  document.querySelector(".eyebrow").textContent = event.target.value || "Trip planner";
+});
+tripTaglineInput.addEventListener("change", () => saveState());
 
 startDateInput.addEventListener("change", (event) => {
   currentTrip().startDate = event.target.value;

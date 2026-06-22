@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Trip Planner</title>
-    <link rel="stylesheet" href="styles.css?v=20260622-2">
+    <link rel="stylesheet" href="styles.css?v=20260622-3">
   </head>
   <body>
     <section id="loginScreen" class="login-screen" aria-label="Trip planner login">
@@ -32,46 +32,80 @@
 
         <section class="planner-main">
           <header class="topbar">
-            <div>
+            <button id="menuBtn" class="menu-button" type="button" aria-label="Open trip menu" aria-expanded="false" aria-controls="tripMenu">
+              <span class="menu-icon" aria-hidden="true"></span>
+              <span class="menu-button-text">Menu</span>
+            </button>
+            <div class="topbar-title">
               <p class="eyebrow">Philadelphia to Sydney</p>
               <h1>Sydney Visa Trip Planner</h1>
             </div>
             <div class="topbar-actions">
-              <button id="newTripBtn" class="ghost-button" type="button">New trip</button>
               <button id="addEventBtn" class="primary-button" type="button">Add item</button>
-              <button id="saveBtn" class="ghost-button" type="button">Save</button>
-              <button id="undoBtn" class="ghost-button" type="button">Undo</button>
-              <button id="signOutBtn" class="ghost-button" type="button">Sign out</button>
             </div>
           </header>
 
-          <section class="controls" aria-label="Trip settings">
-            <label>
-              Trip
-              <select id="tripSelect"></select>
-            </label>
-            <label>
-              Trip starts
-              <input id="startDate" type="date">
-            </label>
-            <label>
-              Mark until
-              <input id="endDate" type="date">
-            </label>
-            <label>
-              Show
-              <select id="categoryFilter">
-                <option value="all">All categories</option>
-              </select>
-            </label>
-          </section>
+          <div id="menuBackdrop" class="menu-backdrop" hidden></div>
 
-          <p id="cloudStatus" class="cloud-status" aria-live="polite">Loading shared plan...</p>
+          <aside id="tripMenu" class="trip-menu" aria-label="Trip menu" aria-hidden="true">
+            <header class="trip-menu-head">
+              <h2>Trip menu</h2>
+              <button id="menuCloseBtn" class="icon-button" type="button" aria-label="Close trip menu">x</button>
+            </header>
 
-          <section class="category-strip" aria-label="Planner categories">
-            <div id="categoryStrip" class="category-list"></div>
-            <button id="addCategoryBtn" class="plain-button" type="button">New category</button>
-          </section>
+            <div class="trip-menu-body">
+              <section class="menu-section" aria-label="Trip">
+                <label>
+                  Trip
+                  <select id="tripSelect"></select>
+                </label>
+                <button id="newTripBtn" class="ghost-button" type="button">New trip</button>
+              </section>
+
+              <section class="menu-section" aria-label="Trip details">
+                <h3 class="menu-heading">Details</h3>
+                <label>
+                  Name
+                  <input id="tripName" type="text" maxlength="60" placeholder="Trip name">
+                </label>
+                <label>
+                  Tagline
+                  <input id="tripTagline" type="text" maxlength="60" placeholder="e.g. Philadelphia to Sydney">
+                </label>
+                <div class="menu-grid">
+                  <label>
+                    Trip starts
+                    <input id="startDate" type="date">
+                  </label>
+                  <label>
+                    Mark until
+                    <input id="endDate" type="date">
+                  </label>
+                </div>
+              </section>
+
+              <section class="menu-section" aria-label="Categories">
+                <h3 class="menu-heading">Categories</h3>
+                <label>
+                  Show
+                  <select id="categoryFilter">
+                    <option value="all">All categories</option>
+                  </select>
+                </label>
+                <div id="categoryStrip" class="category-list"></div>
+                <button id="addCategoryBtn" class="plain-button" type="button">New category</button>
+              </section>
+
+              <section class="menu-section" aria-label="Plan actions">
+                <div class="menu-grid">
+                  <button id="saveBtn" class="ghost-button" type="button">Save</button>
+                  <button id="undoBtn" class="ghost-button" type="button">Undo</button>
+                </div>
+                <button id="signOutBtn" class="ghost-button" type="button">Sign out</button>
+                <p id="cloudStatus" class="cloud-status" aria-live="polite">Loading shared plan...</p>
+              </section>
+            </div>
+          </aside>
 
           <section class="view-bar" aria-label="Calendar view controls">
             <div class="view-toggle" role="group" aria-label="View mode">
@@ -151,6 +185,6 @@
       </form>
     </dialog>
 
-    <script src="app.js?v=20260622-2"></script>
+    <script src="app.js?v=20260622-3"></script>
   </body>
 </html>
