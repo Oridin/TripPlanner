@@ -557,6 +557,208 @@ button:disabled {
   padding: 0;
 }
 
+/* View switcher bar */
+.view-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 12px;
+}
+
+.view-toggle {
+  display: inline-flex;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.view-tab {
+  border: 0;
+  background: #fff;
+  padding: 7px 18px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.view-tab[aria-pressed="true"] {
+  background: var(--ink);
+  color: #fff;
+}
+
+/* Agenda view */
+.agenda-view {
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.agenda-view[hidden] {
+  display: none;
+}
+
+.agenda-day {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  border-bottom: 1px solid var(--line);
+}
+
+.agenda-day:last-child {
+  border-bottom: 0;
+}
+
+.agenda-date {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 14px 12px;
+  border-right: 1px solid var(--line);
+  background: #faf8fb;
+}
+
+.agenda-datebox {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+}
+
+.agenda-weekday,
+.agenda-month {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.agenda-daynum {
+  font-size: 1.7rem;
+  font-weight: 800;
+}
+
+.agenda-add {
+  width: 26px;
+  height: 26px;
+  border: 1px solid #d6d0da;
+  border-radius: 50%;
+  background: #fff;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.agenda-date .today-tag {
+  position: static;
+  top: auto;
+  right: auto;
+}
+
+.agenda-events {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+}
+
+.agenda-empty {
+  margin: 4px 2px;
+  color: #b0abb6;
+  font-size: 0.82rem;
+  font-style: italic;
+}
+
+.agenda-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  width: 100%;
+  text-align: left;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-left: 5px solid var(--event-color, #999);
+  border-radius: 9px;
+  padding: 9px 12px;
+  cursor: pointer;
+}
+
+.agenda-item:hover {
+  border-color: var(--event-color, #999);
+}
+
+.agenda-dot {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: var(--event-color, #999);
+}
+
+.agenda-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.agenda-item-title {
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
+.agenda-item-meta {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.agenda-item-cat {
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.agenda-cont {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-weight: 700;
+  background: #ece9ef;
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+
+.agenda-item.continues {
+  opacity: 0.9;
+}
+
+.agenda-item.continues .agenda-item-title {
+  font-weight: 600;
+}
+
+/* Today + past treatment in the agenda */
+.agenda-day.is-today .agenda-date {
+  background: rgba(97, 183, 246, 0.18);
+  box-shadow: inset 4px 0 0 0 var(--buster-blue);
+}
+
+.agenda-day.is-past .agenda-date {
+  opacity: 0.55;
+}
+
+.agenda-day.is-past .agenda-item {
+  filter: saturate(0.4) opacity(0.75);
+}
+
 @media (max-width: 900px) {
   .app-shell {
     padding: 6px;
@@ -649,6 +851,17 @@ button:disabled {
     top: 6px;
     left: 7px;
     font-size: 0.86rem;
+  }
+
+  /* No room for the text pill in narrow grid cells; the ring + accent edge
+     already mark today clearly. The agenda keeps its label. */
+  .day-cell .today-tag {
+    display: none;
+  }
+
+  .day-cell.is-today .day-number {
+    min-width: 1.5em;
+    height: 1.5em;
   }
 
   .add-day-button {

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Trip Planner</title>
-    <link rel="stylesheet" href="styles.css?v=20260622-1">
+    <link rel="stylesheet" href="styles.css?v=20260622-2">
   </head>
   <body>
     <section id="loginScreen" class="login-screen" aria-label="Trip planner login">
@@ -73,6 +73,14 @@
             <button id="addCategoryBtn" class="plain-button" type="button">New category</button>
           </section>
 
+          <section class="view-bar" aria-label="Calendar view controls">
+            <div class="view-toggle" role="group" aria-label="View mode">
+              <button id="gridViewBtn" class="view-tab" type="button" aria-pressed="true">Calendar</button>
+              <button id="agendaViewBtn" class="view-tab" type="button" aria-pressed="false">Agenda</button>
+            </div>
+            <button id="todayBtn" class="plain-button" type="button">Today</button>
+          </section>
+
           <section class="calendar-wrap">
             <div class="weekday-row" aria-hidden="true">
               <span>Monday</span>
@@ -85,6 +93,8 @@
             </div>
             <div id="calendarGrid" class="calendar-grid" aria-live="polite"></div>
           </section>
+
+          <section id="agendaView" class="agenda-view" aria-live="polite" hidden></section>
         </section>
       </section>
     </main>
@@ -141,6 +151,6 @@
       </form>
     </dialog>
 
-    <script src="app.js?v=20260622-1"></script>
+    <script src="app.js?v=20260622-2"></script>
   </body>
 </html>

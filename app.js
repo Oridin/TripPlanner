@@ -3,6 +3,7 @@ const LEGACY_STORAGE_KEY = "sydney-visa-trip-planner-v2";
 const SUPABASE_URL = "https://uywknhhqlbwydpayqntz.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5d2tuaGhxbGJ3eWRwYXlxbnR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4NjU5NTAsImV4cCI6MjA4NTQ0MTk1MH0.tdWX0o4yNo1uFpe9a2db78k7AbUG8k9o252_OHhU6s0";
 const LOCAL_UNLOCK_KEY = "trip-planner-unlocked";
+const VIEW_MODE_KEY = "trip-planner-view";
 const SHARED_PLAN_ID = "shared";
 const MAX_UNDO_STATES = 30;
 const APP_LOGIN = {
@@ -63,6 +64,7 @@ function tripEvent(id, title, startDate, endDate, time, location, notes, categor
 }
 
 let state = loadState();
+let viewMode = loadViewMode();
 let activeFilter = "all";
 let pointerDrag = null;
 let resizeDrag = null;
@@ -72,6 +74,11 @@ let undoStack = [];
 let lastStateSnapshot = JSON.stringify(state);
 
 const calendarGrid = document.querySelector("#calendarGrid");
+const agendaView = document.querySelector("#agendaView");
+const calendarWrap = document.querySelector(".calendar-wrap");
+const gridViewBtn = document.querySelector("#gridViewBtn");
+const agendaViewBtn = document.querySelector("#agendaViewBtn");
+const todayBtn = document.querySelector("#todayBtn");
 const categoryStrip = document.querySelector("#categoryStrip");
 const categoryFilter = document.querySelector("#categoryFilter");
 const tripSelect = document.querySelector("#tripSelect");
@@ -326,7 +333,42 @@ function render() {
   formatRangeTitle();
   renderTrips();
   renderCategoryControls();
-  renderCalendar();
+  renderView();
+}
+
+function loadViewMode() {
+  const saved = localStorage.getItem(VIEW_MODE_KEY);
+  if (saved === "grid" || saved === "agenda") return saved;
+  // Default to the agenda on small screens, the calendar grid otherwise.
+  return window.matchMedia("(max-width: 700px)").matches ? "agenda" : "grid";
+}
+
+function setViewMode(mode, { scroll = true } = {}) {
+  viewMode = mode === "agenda" ? "agenda" : "grid";
+  localStorage.setItem(VIEW_MODE_KEY, viewMode);
+  renderView();
+  if (scroll) scrollToToday();
+}
+
+function renderView() {
+  const isAgenda = viewMode === "agenda";
+  document.body.classList.toggle("view-agenda", isAgenda);
+  document.body.classList.toggle("view-grid", !isAgenda);
+  calendarWrap.hidden = isAgenda;
+  agendaView.hidden = !isAgenda;
+  gridViewBtn.setAttribute("aria-pressed", String(!isAgenda));
+  agendaViewBtn.setAttribute("aria-pressed", String(isAgenda));
+
+  if (isAgenda) renderAgenda();
+  else renderCalendar();
+}
+
+function scrollToToday() {
+  requestAnimationFrame(() => {
+    const target = (viewMode === "agenda" ? agendaView : calendarGrid)
+      ?.querySelector(".is-today");
+    target?.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+  });
 }
 
 function renderTrips() {
@@ -357,7 +399,7 @@ function renderCategoryControls() {
     pill.querySelector("input").addEventListener("input", (event) => {
       currentTrip().categories[key].color = event.target.value;
       saveState();
-      renderCalendar();
+      renderView();
     });
     categoryStrip.append(pill);
   });
@@ -406,6 +448,85 @@ function renderCalendar() {
     cell.querySelector(".add-day-button").addEventListener("click", () => openDialog({ startDate: dateKey, endDate: dateKey }));
     calendarGrid.append(cell);
   });
+}
+
+function renderAgenda() {
+  const trip = currentTrip();
+  const todayKey = formatDate(new Date());
+  const start = parseDate(trip.startDate);
+  const end = parseDate(trip.endDate);
+  agendaView.innerHTML = "";
+
+  for (let day = new Date(start); day <= end; day = addDays(day, 1)) {
+    const dateKey = formatDate(day);
+    const events = getVisibleEvents(dateKey);
+    const section = document.createElement("section");
+    section.className = "agenda-day";
+    section.dataset.date = dateKey;
+    if (dateKey < todayKey) section.classList.add("is-past");
+    else if (dateKey === todayKey) section.classList.add("is-today");
+
+    const weekday = day.toLocaleDateString("en-US", { weekday: "short" });
+    const month = day.toLocaleDateString("en-US", { month: "short" });
+    const todayTag = dateKey === todayKey ? `<span class="today-tag">Today</span>` : "";
+    section.innerHTML = `
+      <header class="agenda-date">
+        <span class="agenda-datebox">
+          <span class="agenda-weekday">${weekday}</span>
+          <span class="agenda-daynum">${day.getDate()}</span>
+          <span class="agenda-month">${month}</span>
+        </span>
+        ${todayTag}
+        <button class="agenda-add" type="button" aria-label="Add item on ${dateKey}">+</button>
+      </header>
+      <div class="agenda-events"></div>
+    `;
+
+    const list = section.querySelector(".agenda-events");
+    if (events.length) {
+      events.forEach((event) => list.append(createAgendaItem(event, dateKey)));
+    } else {
+      const empty = document.createElement("p");
+      empty.className = "agenda-empty";
+      empty.textContent = "Nothing planned";
+      list.append(empty);
+    }
+
+    section.querySelector(".agenda-add").addEventListener("click", () => openDialog({ startDate: dateKey, endDate: dateKey }));
+    agendaView.append(section);
+  }
+}
+
+function createAgendaItem(event, dateKey) {
+  const trip = currentTrip();
+  const category = trip.categories[event.category] || defaultCategories.task;
+  const card = document.createElement("button");
+  card.type = "button";
+  card.className = "agenda-item";
+  card.dataset.id = event.id;
+  card.style.setProperty("--event-color", category.color);
+
+  const multiDay = event.startDate !== event.endDate;
+  const continues = multiDay && dateKey !== event.startDate;
+  if (multiDay) card.classList.add("multi-day");
+  if (continues) card.classList.add("continues");
+
+  const details = [event.time, event.location].filter(Boolean).join(" · ");
+  const span = multiDay ? `${formatShortDate(event.startDate)} → ${formatShortDate(event.endDate)}` : "";
+  const meta = [details, span].filter(Boolean).join(" · ");
+  const contTag = continues ? ` <span class="agenda-cont">cont.</span>` : "";
+
+  card.innerHTML = `
+    <span class="agenda-dot" aria-hidden="true"></span>
+    <span class="agenda-item-body">
+      <span class="agenda-item-title">${escapeHtml(event.title)}${contTag}</span>
+      ${meta ? `<span class="agenda-item-meta">${escapeHtml(meta)}</span>` : ""}
+      <span class="agenda-item-cat">${escapeHtml(category.label)}</span>
+    </span>
+  `;
+  card.title = [event.title, details, span].filter(Boolean).join(" - ");
+  card.addEventListener("click", () => openDialog(event));
+  return card;
 }
 
 function shouldReserveLane(dateKey, lane, laneById, events) {
@@ -848,6 +969,7 @@ async function loadRemoteState() {
       undoStack = [];
       saveState({ sync: false, recordUndo: false });
       render();
+      scrollToToday();
       setCloudStatus("Shared plan loaded.");
     } else {
       await saveRemoteState();
@@ -962,8 +1084,12 @@ tripSelect.addEventListener("change", (event) => {
 
 categoryFilter.addEventListener("change", (event) => {
   activeFilter = event.target.value;
-  renderCalendar();
+  renderView();
 });
+
+gridViewBtn.addEventListener("click", () => setViewMode("grid"));
+agendaViewBtn.addEventListener("click", () => setViewMode("agenda"));
+todayBtn.addEventListener("click", scrollToToday);
 
 startDateInput.addEventListener("change", (event) => {
   currentTrip().startDate = event.target.value;
