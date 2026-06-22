@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Trip Planner</title>
-    <link rel="stylesheet" href="styles.css?v=20260622-4">
+    <link rel="stylesheet" href="styles.css?v=20260622-5">
   </head>
   <body>
     <section id="loginScreen" class="login-screen" aria-label="Trip planner login">
@@ -137,7 +137,7 @@
       <form id="eventForm" method="dialog">
         <header>
           <h2 id="dialogTitle">Add item</h2>
-          <button class="icon-button" value="cancel" type="submit" aria-label="Close">x</button>
+          <button class="icon-button" value="cancel" type="submit" formnovalidate aria-label="Close">x</button>
         </header>
 
         <input id="eventId" type="hidden">
@@ -180,12 +180,12 @@
         <menu class="dialog-actions">
           <button id="deleteEventBtn" class="danger-button" type="button">Delete</button>
           <span></span>
-          <button class="ghost-button" value="cancel" type="submit">Cancel</button>
+          <button class="ghost-button" value="cancel" type="submit" formnovalidate>Cancel</button>
           <button id="saveEventBtn" class="primary-button" value="default" type="submit">Save</button>
         </menu>
       </form>
     </dialog>
 
-    <script src="app.js?v=20260622-4"></script>
+    <script src="app.js?v=20260622-5"></script>
   </body>
 </html>
