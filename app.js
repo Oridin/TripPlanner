@@ -371,6 +371,7 @@ function renderCalendar() {
   const tripStart = parseDate(trip.startDate);
   const tripEnd = parseDate(trip.endDate);
   const { laneById, laneCount } = assignMultiDayLanes(trip.events);
+  const todayKey = formatDate(new Date());
   calendarGrid.innerHTML = "";
 
   buildCalendarDates().forEach((date) => {
@@ -379,8 +380,12 @@ function renderCalendar() {
     cell.className = "day-cell";
     cell.dataset.date = dateKey;
     if (date < tripStart || date > tripEnd) cell.classList.add("outside");
+    if (dateKey < todayKey) cell.classList.add("is-past");
+    else if (dateKey === todayKey) cell.classList.add("is-today");
+    const todayTag = dateKey === todayKey ? `<span class="today-tag">Today</span>` : "";
     cell.innerHTML = `
       <span class="day-number">${date.getDate()}</span>
+      ${todayTag}
       <button class="add-day-button" type="button" aria-label="Add item on ${dateKey}">+</button>
       <div class="event-stack"></div>
     `;

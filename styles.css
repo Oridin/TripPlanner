@@ -296,6 +296,51 @@ button:disabled {
   outline-offset: -5px;
 }
 
+/* Days that have already passed: receded but still readable. */
+.day-cell.is-past {
+  background: #f4f2f5;
+}
+
+.day-cell.is-past .day-number {
+  color: #a8a3ae;
+}
+
+.day-cell.is-past .event-card {
+  filter: saturate(0.35) opacity(0.7);
+}
+
+/* "You are here" boundary + today marker. */
+.day-cell.is-today {
+  box-shadow: inset 4px 0 0 0 var(--buster-blue);
+}
+
+.day-cell.is-today .day-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.6em;
+  height: 1.6em;
+  padding: 0 0.2em;
+  border: 2px solid var(--buster-blue);
+  border-radius: 999px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.today-tag {
+  position: absolute;
+  top: 9px;
+  right: 38px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--buster-blue);
+  color: #06243a;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .day-number {
   position: absolute;
   top: 8px;
