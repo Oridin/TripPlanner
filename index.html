@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Trip Planner</title>
-    <link rel="stylesheet" href="styles.css?v=20260622-6">
+    <link rel="stylesheet" href="styles.css?v=20260622-7">
   </head>
   <body>
     <section id="loginScreen" class="login-screen" aria-label="Trip planner login">
@@ -113,6 +113,7 @@
               <button id="agendaViewBtn" class="view-tab" type="button" aria-pressed="false">Agenda</button>
             </div>
             <button id="todayBtn" class="plain-button" type="button">Today</button>
+            <button id="printBtn" class="plain-button" type="button">Print</button>
           </section>
 
           <section class="calendar-wrap">
@@ -186,6 +187,41 @@
       </form>
     </dialog>
 
-    <script src="app.js?v=20260622-6"></script>
+    <dialog id="printDialog" class="print-dialog">
+      <form id="printForm" method="dialog">
+        <header>
+          <h2>Print calendar</h2>
+          <button class="icon-button" value="cancel" type="submit" formnovalidate aria-label="Close">x</button>
+        </header>
+
+        <div class="form-grid">
+          <label>
+            Orientation
+            <select id="printOrientation">
+              <option value="landscape">Landscape</option>
+              <option value="portrait">Portrait</option>
+            </select>
+          </label>
+          <label>
+            Layout
+            <select id="printLayout">
+              <option value="fit">Fit to one page</option>
+              <option value="full">Actual size (multi-page)</option>
+            </select>
+          </label>
+        </div>
+        <p class="print-hint">Tip: in the print dialog, set Margins to "Default" and enable "Background graphics" so category colours show.</p>
+
+        <menu class="dialog-actions">
+          <span></span>
+          <button class="ghost-button" value="cancel" type="submit" formnovalidate>Cancel</button>
+          <button id="doPrintBtn" class="primary-button" value="print" type="submit">Print</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <div id="printRoot" aria-hidden="true"></div>
+
+    <script src="app.js?v=20260622-7"></script>
   </body>
 </html>

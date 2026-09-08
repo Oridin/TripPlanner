@@ -87,6 +87,14 @@ const tripNameInput = document.querySelector("#tripName");
 const tripTaglineInput = document.querySelector("#tripTagline");
 const tripTitleEl = document.querySelector("#tripTitle");
 const tripEyebrowEl = document.querySelector("#tripEyebrow");
+const printBtn = document.querySelector("#printBtn");
+const printDialog = document.querySelector("#printDialog");
+const printForm = document.querySelector("#printForm");
+const printOrientation = document.querySelector("#printOrientation");
+const printLayout = document.querySelector("#printLayout");
+const printRoot = document.querySelector("#printRoot");
+const printPageStyle = document.createElement("style");
+document.head.append(printPageStyle);
 const categoryStrip = document.querySelector("#categoryStrip");
 const categoryFilter = document.querySelector("#categoryFilter");
 const tripSelect = document.querySelector("#tripSelect");
@@ -398,6 +406,113 @@ function closeMenu() {
 function toggleMenu() {
   if (document.body.classList.contains("menu-open")) closeMenu();
   else openMenu();
+}
+
+function openPrintDialog() {
+  closeMenu();
+  printDialog.showModal();
+}
+
+function runPrint() {
+  const orientation = printOrientation.value === "portrait" ? "portrait" : "landscape";
+  const layout = printLayout.value === "full" ? "full" : "fit";
+  const pageWidth = orientation === "landscape" ? 960 : 720;
+  const pageHeight = orientation === "landscape" ? 720 : 980;
+
+  // Render the print sheet offscreen so it can be measured for fit scaling.
+  printRoot.style.cssText = "position:fixed;left:-10000px;top:0;display:block;visibility:hidden;";
+  const sheet = buildPrintCalendar(pageWidth);
+
+  if (layout === "fit") {
+    const height = sheet.getBoundingClientRect().height;
+    const scale = Math.min(1, pageHeight / height);
+    if (scale < 1) {
+      const scaler = document.createElement("div");
+      scaler.className = "print-scaler";
+      scaler.style.height = `${height * scale}px`;
+      sheet.style.transformOrigin = "top left";
+      sheet.style.transform = `scale(${scale})`;
+      sheet.replaceWith(scaler);
+      scaler.append(sheet);
+    }
+  }
+
+  printRoot.style.cssText = "";
+  printPageStyle.textContent = `@page { size: ${orientation}; margin: 8mm; }`;
+  window.print();
+}
+
+function buildPrintCalendar(pageWidth) {
+  const trip = currentTrip();
+  const todayKey = formatDate(new Date());
+  const tripStart = parseDate(trip.startDate);
+  const tripEnd = parseDate(trip.endDate);
+  printRoot.innerHTML = "";
+
+  const sheet = document.createElement("div");
+  sheet.className = "print-sheet";
+  sheet.style.width = `${pageWidth}px`;
+
+  const header = document.createElement("div");
+  header.className = "print-header";
+  const range = `${formatShortDate(trip.startDate)} – ${formatShortDate(trip.endDate)}`;
+  const sub = [trip.tagline, range].filter(Boolean).join(" · ");
+  header.innerHTML = `
+    <div class="print-title">${escapeHtml(trip.name)}</div>
+    <div class="print-sub">${escapeHtml(sub)}</div>
+  `;
+  sheet.append(header);
+
+  const weekdayRow = document.createElement("div");
+  weekdayRow.className = "print-weekdays";
+  ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].forEach((day) => {
+    const span = document.createElement("span");
+    span.textContent = day;
+    weekdayRow.append(span);
+  });
+  sheet.append(weekdayRow);
+
+  const weeks = document.createElement("div");
+  weeks.className = "print-weeks";
+  const dates = buildCalendarDates();
+
+  for (let i = 0; i < dates.length; i += 7) {
+    const week = document.createElement("div");
+    week.className = "print-week";
+    for (let j = 0; j < 7; j += 1) {
+      const date = dates[i + j];
+      const dateKey = formatDate(date);
+      const cell = document.createElement("div");
+      cell.className = "print-day";
+      if (date < tripStart || date > tripEnd) cell.classList.add("outside");
+      if (dateKey === todayKey) cell.classList.add("today");
+
+      const num = document.createElement("div");
+      num.className = "print-daynum";
+      const showMonth = date.getDate() === 1 || (i === 0 && j === 0);
+      num.textContent = showMonth
+        ? `${date.toLocaleDateString("en-US", { month: "short" })} ${date.getDate()}`
+        : date.getDate();
+      cell.append(num);
+
+      getVisibleEvents(dateKey).forEach((event) => {
+        const category = trip.categories[event.category] || defaultCategories.task;
+        const chip = document.createElement("div");
+        chip.className = "print-event";
+        chip.style.setProperty("--event-color", category.color);
+        const time = event.time ? `<span class="print-event-time">${escapeHtml(event.time)}</span> ` : "";
+        chip.innerHTML = `${time}${escapeHtml(event.title)}`;
+        cell.append(chip);
+      });
+
+      week.append(cell);
+    }
+    weeks.append(week);
+  }
+
+  sheet.append(weeks);
+  printRoot.append(sheet);
+  return sheet;
 }
 
 function populateTimeOptions() {
@@ -1140,6 +1255,14 @@ todayBtn.addEventListener("click", scrollToToday);
 menuBtn.addEventListener("click", toggleMenu);
 menuCloseBtn.addEventListener("click", closeMenu);
 menuBackdrop.addEventListener("click", closeMenu);
+
+printBtn.addEventListener("click", openPrintDialog);
+printForm.addEventListener("submit", (event) => {
+  if (event.submitter?.value !== "print") return;
+  event.preventDefault();
+  printDialog.close();
+  runPrint();
+});
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && document.body.classList.contains("menu-open")) closeMenu();
 });

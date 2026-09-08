@@ -879,6 +879,166 @@ button:disabled {
   filter: saturate(0.4) opacity(0.75);
 }
 
+/* Print options dialog */
+.print-dialog {
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  padding: 20px;
+  max-width: 460px;
+  width: calc(100% - 32px);
+}
+
+.print-dialog::backdrop {
+  background: rgba(20, 16, 28, 0.45);
+}
+
+.print-dialog header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.print-dialog header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.print-hint {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+/* Print-only calendar rendering (hidden on screen) */
+#printRoot {
+  display: none;
+}
+
+.print-scaler {
+  overflow: hidden;
+}
+
+.print-sheet {
+  box-sizing: border-box;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #111;
+  background: #fff;
+}
+
+.print-header {
+  margin-bottom: 8px;
+}
+
+.print-title {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.print-sub {
+  font-size: 11px;
+  color: #555;
+  margin-top: 2px;
+}
+
+.print-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border: 1px solid #222;
+  border-bottom: 0;
+}
+
+.print-weekdays span {
+  padding: 3px 5px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: #ececec;
+  border-right: 1px solid #bbb;
+}
+
+.print-weekdays span:last-child {
+  border-right: 0;
+}
+
+.print-weeks {
+  border-left: 1px solid #222;
+  border-top: 1px solid #222;
+}
+
+.print-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.print-day {
+  box-sizing: border-box;
+  min-height: 74px;
+  padding: 3px 4px 5px;
+  border-right: 1px solid #bbb;
+  border-bottom: 1px solid #222;
+  overflow: hidden;
+}
+
+.print-day.outside {
+  background: #f3f3f3;
+  color: #999;
+}
+
+.print-day.today {
+  outline: 2px solid #111;
+  outline-offset: -2px;
+}
+
+.print-daynum {
+  font-size: 10px;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+
+.print-event {
+  font-size: 9px;
+  line-height: 1.25;
+  padding: 1px 3px 1px 4px;
+  margin-bottom: 2px;
+  border-left: 3px solid var(--event-color, #999);
+  background: #f7f7f7;
+  border-radius: 2px;
+  word-break: break-word;
+}
+
+.print-event-time {
+  font-weight: 700;
+}
+
+@media print {
+  html,
+  body {
+    background: #fff !important;
+  }
+
+  body > *:not(#printRoot) {
+    display: none !important;
+  }
+
+  #printRoot {
+    display: block !important;
+  }
+
+  .print-day,
+  .print-event,
+  .print-weekdays span,
+  .print-day.outside {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
 @media (max-width: 900px) {
   .app-shell {
     padding: 6px;
